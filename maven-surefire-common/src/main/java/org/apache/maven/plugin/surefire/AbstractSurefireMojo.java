@@ -107,6 +107,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static java.lang.Boolean.TRUE;
 import static java.lang.Thread.currentThread;
 import static java.util.Arrays.asList;
 import static java.util.Collections.addAll;
@@ -718,6 +719,9 @@ public abstract class AbstractSurefireMojo
     @Parameter( property = "dependenciesToScan" )
     private String[] dependenciesToScan;
 
+    /**
+     *
+     */
     @Component
     private ToolchainManager toolchainManager;
 
@@ -776,6 +780,10 @@ public abstract class AbstractSurefireMojo
     protected abstract String[] getDefaultIncludes();
 
     protected abstract String getReportSchemaLocation();
+
+    protected abstract boolean useJigsawModules();
+
+    protected abstract void setUseJigsawModules( boolean useJigsawModules );
 
     /**
      * This plugin MOJO artifact.
@@ -920,7 +928,7 @@ public abstract class AbstractSurefireMojo
         if ( !getTestClassesDirectory().exists()
             && ( getDependenciesToScan() == null || getDependenciesToScan().length == 0 ) )
         {
-            if ( Boolean.TRUE.equals( getFailIfNoTests() ) )
+            if ( TRUE.equals( getFailIfNoTests() ) )
             {
                 throw new MojoFailureException( "No tests to run!" );
             }
@@ -1097,17 +1105,18 @@ public abstract class AbstractSurefireMojo
         RunOrderParameters runOrderParameters =
             new RunOrderParameters( getRunOrder(), getStatisticsFile( getConfigChecksum() ) );
 
+        Platform platform = PLATFORM.withJdkExecAttributesForTests( getEffectiveJvm() );
         if ( isNotForking() )
         {
             createCopyAndReplaceForkNumPlaceholder( effectiveProperties, 1 ).copyToSystemProperties();
 
             InPluginVMSurefireStarter surefireStarter =
-                createInprocessStarter( provider, classLoaderConfiguration, runOrderParameters, scanResult );
+                createInprocessStarter( provider, classLoaderConfiguration, runOrderParameters, scanResult, platform );
             return surefireStarter.runSuitesInProcess( scanResult );
         }
         else
         {
-            ForkConfiguration forkConfiguration = getForkConfiguration();
+            ForkConfiguration forkConfiguration = createForkConfiguration( platform );
             if ( getConsoleLogger().isDebugEnabled() )
             {
                 showMap( getEnvironmentVariables(), "environment variable" );
@@ -1118,7 +1127,7 @@ public abstract class AbstractSurefireMojo
             try
             {
                 forkStarter = createForkStarter( provider, forkConfiguration, classLoaderConfiguration,
-                                                       runOrderParameters, getConsoleLogger(), scanResult );
+                                                       runOrderParameters, getConsoleLogger(), scanResult, platform );
 
                 return forkStarter.run( effectiveProperties, scanResult );
             }
@@ -1203,6 +1212,13 @@ public abstract class AbstractSurefireMojo
     private File getModuleDescriptor()
     {
         return new File( getClassesDirectory(), "module-info.class" );
+    }
+
+    private boolean canExecuteProviderWithJigsaw( Platform platform )
+    {
+        return useJigsawModules()
+                && platform.getJdkExecAttributesForTests().isJava9AtLeast()
+                && existsModuleDescriptor();
     }
 
     /**
@@ -1657,18 +1673,18 @@ public abstract class AbstractSurefireMojo
 
     private StartupConfiguration createStartupConfiguration( @Nonnull ProviderInfo provider, boolean isInprocess,
                                                              @Nonnull ClassLoaderConfiguration classLoaderConfiguration,
-                                                             @Nonnull DefaultScanResult scanResult )
+                                                             @Nonnull DefaultScanResult scanResult,
+                                                             @Nonnull Platform platform )
         throws MojoExecutionException
     {
         try
         {
-            File moduleDescriptor = getModuleDescriptor();
             Set<Artifact> providerArtifacts = provider.getProviderClasspath();
             String providerName = provider.getProviderName();
-            if ( moduleDescriptor.exists() && !isInprocess )
+            if ( canExecuteProviderWithJigsaw( platform ) && !isInprocess )
             {
                 return newStartupConfigWithModularPath( classLoaderConfiguration, providerArtifacts, providerName,
-                        moduleDescriptor, scanResult );
+                        getModuleDescriptor(), scanResult );
             }
             else
             {
@@ -2066,11 +2082,11 @@ public abstract class AbstractSurefireMojo
     private ForkStarter createForkStarter( @Nonnull ProviderInfo provider, @Nonnull ForkConfiguration forkConfiguration,
                                            @Nonnull ClassLoaderConfiguration classLoaderConfiguration,
                                            @Nonnull RunOrderParameters runOrderParameters, @Nonnull ConsoleLogger log,
-                                           @Nonnull DefaultScanResult scanResult )
+                                           @Nonnull DefaultScanResult scanResult, @Nonnull Platform platform )
         throws MojoExecutionException, MojoFailureException
     {
         StartupConfiguration startupConfiguration =
-                createStartupConfiguration( provider, false, classLoaderConfiguration, scanResult );
+                createStartupConfiguration( provider, false, classLoaderConfiguration, scanResult, platform );
         String configChecksum = getConfigChecksum();
         StartupReportConfiguration startupReportConfiguration = getStartupReportConfiguration( configChecksum, true );
         ProviderConfiguration providerConfiguration = createProviderConfiguration( runOrderParameters );
@@ -2083,11 +2099,12 @@ public abstract class AbstractSurefireMojo
     private InPluginVMSurefireStarter createInprocessStarter( @Nonnull ProviderInfo provider,
                                                               @Nonnull ClassLoaderConfiguration classLoaderConfig,
                                                               @Nonnull RunOrderParameters runOrderParameters,
-                                                              @Nonnull DefaultScanResult scanResult )
+                                                              @Nonnull DefaultScanResult scanResult,
+                                                              @Nonnull Platform platform )
         throws MojoExecutionException, MojoFailureException
     {
         StartupConfiguration startupConfiguration =
-                createStartupConfiguration( provider, true, classLoaderConfig, scanResult );
+                createStartupConfiguration( provider, true, classLoaderConfig, scanResult, platform );
         String configChecksum = getConfigChecksum();
         StartupReportConfiguration startupReportConfiguration = getStartupReportConfiguration( configChecksum, false );
         ProviderConfiguration providerConfiguration = createProviderConfiguration( runOrderParameters );
@@ -2096,7 +2113,7 @@ public abstract class AbstractSurefireMojo
     }
 
     @Nonnull
-    private ForkConfiguration getForkConfiguration() throws MojoFailureException
+    private ForkConfiguration createForkConfiguration( Platform platform )
     {
         File tmpDir = getSurefireTempDir();
 
@@ -2104,9 +2121,7 @@ public abstract class AbstractSurefireMojo
 
         Classpath bootClasspath = getArtifactClasspath( shadeFire != null ? shadeFire : surefireBooterArtifact );
 
-        Platform platform = PLATFORM.withJdkExecAttributesForTests( getEffectiveJvm() );
-
-        if ( platform.getJdkExecAttributesForTests().isJava9AtLeast() && existsModuleDescriptor() )
+        if ( canExecuteProviderWithJigsaw( platform ) )
         {
             return new ModularClasspathForkConfiguration( bootClasspath,
                     tmpDir,
@@ -2390,6 +2405,7 @@ public abstract class AbstractSurefireMojo
         checksum.add( getForkedProcessExitTimeoutInSeconds() );
         checksum.add( getRerunFailingTestsCount() );
         checksum.add( getTempDir() );
+        checksum.add( useJigsawModules() );
         addPluginSpecificChecksumItems( checksum );
         return checksum.getSha1();
     }
@@ -3442,6 +3458,11 @@ public abstract class AbstractSurefireMojo
     public void setDependenciesToScan( String[] dependenciesToScan )
     {
         this.dependenciesToScan = dependenciesToScan;
+    }
+
+    public PluginDescriptor getPluginDescriptor()
+    {
+        return pluginDescriptor;
     }
 
     public MavenProject getProject()

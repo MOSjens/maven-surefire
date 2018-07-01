@@ -385,6 +385,17 @@ public class IntegrationTestMojo
     @Parameter( property = "dockerImage", defaultValue = "surefire-docker:1" )
     private String dockerImage ;
 
+	/**
+     * Disables Jigsaw (Java 9) modular path even if <i>module-info.java</i> is used in project.
+     * <br>
+     * Enabled by default.
+     * If enabled, <i>module-info.java</i> exists and executes with JDK 9+, modular path is used.
+     *
+     * @since 3.0.0-M2
+     */
+    @Parameter( property = "failsafe.useJigsawModules", defaultValue = "true" )
+    private boolean useJigsawModules;
+
     @Override
     protected int getRerunFailingTestsCount()
     {
@@ -813,6 +824,18 @@ public class IntegrationTestMojo
     public File getExcludesFile()
     {
         return excludesFile;
+    }
+
+    @Override
+    protected boolean useJigsawModules()
+    {
+        return useJigsawModules;
+    }
+
+    @Override
+    protected void setUseJigsawModules( boolean useJigsawModules )
+    {
+        this.useJigsawModules = useJigsawModules;
     }
 
     @Override
