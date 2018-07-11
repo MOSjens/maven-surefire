@@ -37,6 +37,7 @@ import org.apache.maven.surefire.util.RunOrder;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 import static org.apache.maven.surefire.booter.AbstractPathConfiguration.CHILD_DELEGATION;
@@ -138,7 +139,14 @@ class BooterSerializer
             properties.setProperty( SOURCE_DIRECTORY, dockerEnabled
                     ? dockerUtil.rewritePath( testSuiteDefinition.getTestSourceDirectory().getAbsolutePath() )
                     : testSuiteDefinition.getTestSourceDirectory().getAbsolutePath() );
-            properties.addList( testSuiteDefinition.getSuiteXmlFiles(), TEST_SUITE_XML_FILES );
+            if ( testSet instanceof File )
+            {
+                properties.addList( Collections.singletonList( (File) testSet ), TEST_SUITE_XML_FILES );
+            }
+            else
+            {
+                properties.addList( testSuiteDefinition.getSuiteXmlFiles(), TEST_SUITE_XML_FILES );
+            }
             TestListResolver testFilter = testSuiteDefinition.getTestListResolver();
             properties.setProperty( REQUESTEDTEST, testFilter == null ? "" : testFilter.getPluginParameterTest() );
             int rerunFailingTestsCount = testSuiteDefinition.getRerunFailingTestsCount();
