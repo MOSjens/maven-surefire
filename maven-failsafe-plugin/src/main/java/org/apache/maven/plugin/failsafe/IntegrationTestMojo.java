@@ -53,6 +53,7 @@ public class IntegrationTestMojo
         extends AbstractSurefireMojo
 {
 
+
     private static final String FAILSAFE_IN_PROGRESS_CONTEXT_KEY = "failsafe-in-progress";
 
     /**
@@ -372,6 +373,13 @@ public class IntegrationTestMojo
     @Parameter( property = "failsafe.shutdown", defaultValue = "testset" )
     private String shutdown;
 
+    /**
+     * Parameter to set weather the integration tests should be executed on docker or the host machine.
+     * @since 3.0.0-SNAPSHOT
+     */
+    @Parameter( property = "enableDocker", defaultValue = "false" )
+    private boolean enableDocker ;
+
     @Override
     protected int getRerunFailingTestsCount()
     {
@@ -383,6 +391,7 @@ public class IntegrationTestMojo
     protected void handleSummary( RunResult summary, Exception firstForkException )
             throws MojoExecutionException, MojoFailureException
     {
+        System.out.println( getEnableDocker() );
         File summaryFile = getSummaryFile();
         if ( !summaryFile.getParentFile().isDirectory() )
         {
@@ -824,5 +833,11 @@ public class IntegrationTestMojo
     static Charset toCharset( String encoding )
     {
         return Charset.forName( Charset.isSupported( encoding ) ? encoding : encoding.toUpperCase( Locale.ROOT ) );
+    }
+
+    @Override
+    public boolean getEnableDocker()
+    {
+        return enableDocker;
     }
 }

@@ -87,6 +87,7 @@ public class ForkConfigurationTest
         StartupConfiguration startup = new StartupConfiguration( "", cpConfig, clc, false, false );
 
         Commandline commandLine = config.createCommandLine( startup, 1 );
+
         assertTrue( commandLine.toString().contains( "abc def" ) );
     }
 
@@ -107,6 +108,7 @@ public class ForkConfigurationTest
         ClassLoaderConfiguration clc = new ClassLoaderConfiguration( true, true );
         StartupConfiguration startup = new StartupConfiguration( "", cpConfig, clc, false, false );
         ForkConfiguration config = getForkConfiguration( cwd.getCanonicalFile() );
+
         Commandline commandLine = config.createCommandLine( startup, 1 );
 
         File forkDirectory = new File( baseDir, "fork_1" );

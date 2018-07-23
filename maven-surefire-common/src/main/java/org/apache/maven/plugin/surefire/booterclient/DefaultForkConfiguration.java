@@ -112,32 +112,49 @@ public abstract class DefaultForkConfiguration
      */
     @Nonnull
     @Override
-    public OutputStreamFlushableCommandline createCommandLine( @Nonnull StartupConfiguration config, int forkNumber )
+    public OutputStreamFlushableCommandline createCommandLine( @Nonnull StartupConfiguration config, int forkNumber,
+                                                               boolean enableDocker )
             throws SurefireBooterForkException
     {
         OutputStreamFlushableCommandline cli = new OutputStreamFlushableCommandline();
 
         cli.setWorkingDirectory( getWorkingDirectory( forkNumber ).getAbsolutePath() );
 
-        for ( Entry<String, String> entry : getEnvironmentVariables().entrySet() )
+        // When docker is enabled change the cli to  the docker syntax.
+        if ( enableDocker )
         {
-            String value = entry.getValue();
-            cli.addEnvironment( entry.getKey(), value == null ? "" : value );
+            String commandLine = "docker run --rm --mount type=bind,source=\"C:/noscan\",target=/workspace"
+                    + " --mount type=bind,source=\"C:/Users/reinhart/.m2\",target=/root/.m2 --mount type=bind,source="
+                    + "\"C:/Users/reinhart/AppData/Local/Temp/"
+                    + getTempDirectory().getName()
+                    + "\",target=/tempDir java:8";
+
+            cli.createArg().setLine( commandLine );
         }
-
-        cli.setExecutable( getJdkForTests().getJvmExecutable() );
-
-        String jvmArgLine = newJvmArgLine( forkNumber );
-        if ( !jvmArgLine.isEmpty() )
+        else
         {
-            cli.createArg()
-                    .setLine( jvmArgLine );
-        }
 
-        if ( getDebugLine() != null && !getDebugLine().isEmpty() )
-        {
-            cli.createArg()
-                    .setLine( getDebugLine() );
+            for ( Entry<String, String> entry : getEnvironmentVariables().entrySet() )
+            {
+                String value = entry.getValue();
+                cli.addEnvironment( entry.getKey(), value == null ? "" : value );
+            }
+
+            cli.setExecutable( getJdkForTests().getJvmExecutable() );
+
+            String jvmArgLine = newJvmArgLine( forkNumber );
+            if ( !jvmArgLine.isEmpty() )
+            {
+                cli.createArg()
+                        .setLine( jvmArgLine );
+            }
+
+            if ( getDebugLine() != null && !getDebugLine().isEmpty() )
+            {
+                cli.createArg()
+                        .setLine( getDebugLine() );
+            }
+
         }
 
         resolveClasspath( cli, findStartClass( config ), config );

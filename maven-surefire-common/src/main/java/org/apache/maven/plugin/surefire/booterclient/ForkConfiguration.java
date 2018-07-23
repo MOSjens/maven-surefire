@@ -61,6 +61,7 @@ public abstract class ForkConfiguration
      */
     @Nonnull
     public abstract OutputStreamFlushableCommandline createCommandLine( @Nonnull StartupConfiguration config,
-                                                                        int forkNumber )
+                                                                        int forkNumber,
+                                                                        boolean enableDocker )
             throws SurefireBooterForkException;
 }

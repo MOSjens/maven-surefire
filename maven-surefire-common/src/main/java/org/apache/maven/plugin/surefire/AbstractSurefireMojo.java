@@ -46,6 +46,7 @@ import org.apache.maven.plugin.surefire.booterclient.ForkConfiguration;
 import org.apache.maven.plugin.surefire.booterclient.ForkStarter;
 import org.apache.maven.plugin.surefire.booterclient.ClasspathForkConfiguration;
 import org.apache.maven.plugin.surefire.booterclient.JarManifestForkConfiguration;
+import org.apache.maven.plugin.surefire.booterclient.DockerJarManifestForkConfiguration;
 import org.apache.maven.plugin.surefire.booterclient.ModularClasspathForkConfiguration;
 import org.apache.maven.plugin.surefire.booterclient.Platform;
 import org.apache.maven.plugin.surefire.booterclient.ProviderDetector;
@@ -115,11 +116,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import static java.lang.Thread.currentThread;
 import static java.util.Arrays.asList;
 import static java.util.Collections.addAll;
-import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.apache.commons.lang3.StringUtils.substringBeforeLast;
 import static org.apache.commons.lang3.SystemUtils.IS_OS_WINDOWS;
-import static org.apache.maven.plugin.surefire.util.DependencyScanner.filter;
 import static org.apache.maven.shared.utils.StringUtils.capitalizeFirstLetter;
 import static org.apache.maven.shared.utils.StringUtils.isEmpty;
 import static org.apache.maven.shared.utils.StringUtils.isNotBlank;
@@ -488,15 +487,6 @@ public abstract class AbstractSurefireMojo
     private String junitArtifactName;
 
     /**
-     * Allows you to specify the name of the JUnit Platform artifact.
-     * If not set, {@code org.junit.platform:junit-platform-engine} will be used.
-     *
-     * @since 2.22.0
-     */
-    @Parameter( property = "junitPlatformArtifactName", defaultValue = "org.junit.platform:junit-platform-engine" )
-    private String junitPlatformArtifactName;
-
-    /**
      * Allows you to specify the name of the TestNG artifact. If not set, {@code org.testng:testng} will be used.
      *
      * @since 2.3.1
@@ -742,11 +732,8 @@ public abstract class AbstractSurefireMojo
      * List of dependencies to scan for test classes to include in the test run.
      * The child elements of this element must be &lt;dependency&gt; elements, and the
      * contents of each of these elements must be a string which follows the format:
-     * <br>
+     *
      * <i>groupId:artifactId</i>. For example: <i>org.acme:project-a</i>.
-     * <br>
-     * Since version 2.22.0 you can scan for test classes from a project
-     * dependency of your multi-module project.
      *
      * @since 2.15
      */
@@ -908,13 +895,7 @@ public abstract class AbstractSurefireMojo
         return scanner.scan();
     }
 
-    @SuppressWarnings( "unchecked" )
-    List<Artifact> getProjectTestArtifacts()
-    {
-        return project.getTestArtifacts();
-    }
-
-    DefaultScanResult scanDependencies() throws MojoFailureException
+    private DefaultScanResult scanDependencies()
     {
         if ( getDependenciesToScan() == null )
         {
@@ -924,40 +905,16 @@ public abstract class AbstractSurefireMojo
         {
             try
             {
-                DefaultScanResult result = null;
-
-                List<Artifact> dependenciesToScan =
-                        filter( getProjectTestArtifacts(), asList( getDependenciesToScan() ) );
-
-                for ( Artifact artifact : dependenciesToScan )
-                {
-                    String type = artifact.getType();
-                    File out = artifact.getFile();
-                    if ( out == null || !out.exists()
-                            || !( "jar".equals( type ) || out.isDirectory() || out.getName().endsWith( ".jar" ) ) )
-                    {
-                        continue;
-                    }
-
-                    if ( out.isFile() )
-                    {
-                        DependencyScanner scanner =
-                                new DependencyScanner( singletonList( out ), getIncludedAndExcludedTests() );
-                        result = result == null ? scanner.scan() : result.append( scanner.scan() );
-                    }
-                    else if ( out.isDirectory() )
-                    {
-                        DirectoryScanner scanner =
-                                new DirectoryScanner( out, getIncludedAndExcludedTests() );
-                        result = result == null ? scanner.scan() : result.append( scanner.scan() );
-                    }
-                }
-
-                return result;
+                // @TODO noinspection unchecked, check MavenProject 3.x for Generics in surefire:3.0
+                @SuppressWarnings( "unchecked" )
+                List<File> dependenciesToScan =
+                    DependencyScanner.filter( project.getTestArtifacts(), asList( getDependenciesToScan() ) );
+                DependencyScanner scanner = new DependencyScanner( dependenciesToScan, getIncludedAndExcludedTests() );
+                return scanner.scan();
             }
             catch ( Exception e )
             {
-                throw new MojoFailureException( e.getLocalizedMessage(), e );
+                throw new RuntimeException( e );
             }
         }
     }
@@ -1066,7 +1023,6 @@ public abstract class AbstractSurefireMojo
         Artifact junitDepArtifact = getJunitDepArtifact();
         return new ProviderList( new DynamicProviderInfo( null ),
                               new TestNgProviderInfo( getTestNgArtifact() ),
-                              new JUnitPlatformProviderInfo( getJunitPlatformArtifact() ),
                               new JUnitCoreProviderInfo( getJunitArtifact(), junitDepArtifact ),
                               new JUnit4ProviderInfo( getJunitArtifact(), junitDepArtifact ),
                               new JUnit3ProviderInfo() )
@@ -1585,7 +1541,7 @@ public abstract class AbstractSurefireMojo
         return dependencyResolver.isWithinVersionSpec( artifact, "[4.0,)" );
     }
 
-    private static boolean isForkModeNever( String forkMode )
+    static boolean isForkModeNever( String forkMode )
     {
         return FORK_NEVER.equals( forkMode );
     }
@@ -2078,21 +2034,6 @@ public abstract class AbstractSurefireMojo
         return getProjectArtifactMap().get( "junit:junit-dep" );
     }
 
-
-    private Artifact getJunitPlatformArtifact()
-    {
-        Artifact artifact = getProjectArtifactMap().get( getJunitPlatformArtifactName() );
-        Artifact projectArtifact = project.getArtifact();
-        String projectArtifactName = projectArtifact.getGroupId() + ":" + projectArtifact.getArtifactId();
-
-        if ( artifact == null && projectArtifactName.equals( getJunitPlatformArtifactName() ) )
-        {
-            artifact = projectArtifact;
-        }
-
-        return artifact;
-    }
-
     private ForkStarter createForkStarter( @Nonnull ProviderInfo provider, @Nonnull ForkConfiguration forkConfiguration,
                                            @Nonnull ClassLoaderConfiguration classLoaderConfiguration,
                                            @Nonnull RunOrderParameters runOrderParameters, @Nonnull ConsoleLogger log,
@@ -2104,8 +2045,9 @@ public abstract class AbstractSurefireMojo
         String configChecksum = getConfigChecksum();
         StartupReportConfiguration startupReportConfiguration = getStartupReportConfiguration( configChecksum );
         ProviderConfiguration providerConfiguration = createProviderConfiguration( runOrderParameters );
+        boolean enableDocker = getEnableDocker();
         return new ForkStarter( providerConfiguration, startupConfiguration, forkConfiguration,
-                                getForkedProcessTimeoutInSeconds(), startupReportConfiguration, log );
+                                getForkedProcessTimeoutInSeconds(), startupReportConfiguration, log, enableDocker );
     }
 
     private InPluginVMSurefireStarter createInprocessStarter( @Nonnull ProviderInfo provider,
@@ -2126,6 +2068,9 @@ public abstract class AbstractSurefireMojo
     @Nonnull
     private ForkConfiguration getForkConfiguration() throws MojoFailureException
     {
+        System.out.println( "enableDocker: " );
+        System.out.println( getEnableDocker() );
+
         File tmpDir = getSurefireTempDir();
 
         Artifact shadeFire = getPluginArtifactMap().get( "org.apache.maven.surefire:surefire-shadefire" );
@@ -2150,9 +2095,24 @@ public abstract class AbstractSurefireMojo
                     platform,
                     getConsoleLogger() );
         }
-        else if ( getClassLoaderConfiguration().isManifestOnlyJarRequestedAndUsable() )
+        else if ( getClassLoaderConfiguration().isManifestOnlyJarRequestedAndUsable() && !getEnableDocker() )
         {
             return new JarManifestForkConfiguration( bootClasspath,
+                    tmpDir,
+                    getEffectiveDebugForkedProcess(),
+                    getWorkingDirectory() != null ? getWorkingDirectory() : getBasedir(),
+                    getProject().getModel().getProperties(),
+                    getArgLine(),
+                    getEnvironmentVariables(),
+                    getConsoleLogger().isDebugEnabled(),
+                    getEffectiveForkCount(),
+                    reuseForks,
+                    platform,
+                    getConsoleLogger() );
+        }
+        else if ( getClassLoaderConfiguration().isManifestOnlyJarRequestedAndUsable() && getEnableDocker() )
+        {
+            return new DockerJarManifestForkConfiguration( bootClasspath,
                     tmpDir,
                     getEffectiveDebugForkedProcess(),
                     getWorkingDirectory() != null ? getWorkingDirectory() : getBasedir(),
@@ -2720,8 +2680,7 @@ public abstract class AbstractSurefireMojo
             {
                 Artifact junitArtifact = getJunitArtifact();
                 boolean junit47Compatible = isJunit47Compatible( junitArtifact );
-                boolean junit5PlatformCompatible = getJunitPlatformArtifact() != null;
-                if ( !junit47Compatible && !junit5PlatformCompatible )
+                if ( !junit47Compatible )
                 {
                     if ( junitArtifact != null )
                     {
@@ -2730,8 +2689,8 @@ public abstract class AbstractSurefireMojo
                                                             + "Check your dependency:tree to see if your project "
                                                             + "is picking up an old junit version" );
                     }
-                    throw new MojoFailureException( "groups/excludedGroups require TestNG, JUnit48+ or JUnit 5 "
-                            + "on project test classpath" );
+                    throw new MojoFailureException( "groups/excludedGroups require TestNG or JUnit48+ on project test "
+                                                        + "classpath" );
                 }
             }
 
@@ -2932,40 +2891,6 @@ public abstract class AbstractSurefireMojo
                                                             null );
         }
 
-    }
-
-    final class JUnitPlatformProviderInfo
-        implements ProviderInfo
-    {
-        private final Artifact junitArtifact;
-
-        JUnitPlatformProviderInfo( Artifact junitArtifact )
-        {
-            this.junitArtifact = junitArtifact;
-        }
-
-        @Nonnull public String getProviderName()
-        {
-            return "org.apache.maven.surefire.junitplatform.JUnitPlatformProvider";
-        }
-
-        public boolean isApplicable()
-        {
-            return junitArtifact != null;
-        }
-
-        public void addProviderProperties() throws MojoExecutionException
-        {
-            convertGroupParameters();
-        }
-
-        public Classpath getProviderClasspath()
-            throws ArtifactResolutionException, ArtifactNotFoundException
-        {
-            return dependencyResolver.getProviderClasspath( "surefire-junit-platform",
-                                                            surefireBooterArtifact.getBaseVersion(),
-                                                            null );
-        }
     }
 
     final class JUnitCoreProviderInfo
@@ -3424,17 +3349,6 @@ public abstract class AbstractSurefireMojo
         this.junitArtifactName = junitArtifactName;
     }
 
-    public String getJunitPlatformArtifactName()
-    {
-        return junitPlatformArtifactName;
-    }
-
-    @SuppressWarnings( "UnusedDeclaration" )
-    public void setJunitPlatformArtifactName( String junitPlatformArtifactName )
-    {
-        this.junitPlatformArtifactName = junitPlatformArtifactName;
-    }
-
     public String getTestNGArtifactName()
     {
         return testNGArtifactName;
@@ -3783,5 +3697,10 @@ public abstract class AbstractSurefireMojo
         {
             throw new IllegalArgumentException( "Fork mode " + forkMode + " is not a legal value" );
         }
+    }
+
+    public boolean getEnableDocker()
+    {
+        return false;
     }
 }

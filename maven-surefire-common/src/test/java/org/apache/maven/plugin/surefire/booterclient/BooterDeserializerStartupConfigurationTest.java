@@ -123,7 +123,7 @@ public class BooterDeserializerStartupConfigurationTest
     {
         final ForkConfiguration forkConfiguration = ForkConfigurationTest.getForkConfiguration( (String) null );
         PropertiesWrapper props = new PropertiesWrapper( new HashMap<String, String>() );
-        BooterSerializer booterSerializer = new BooterSerializer( forkConfiguration );
+        BooterSerializer booterSerializer = new BooterSerializer( forkConfiguration, false );
         String aTest = "aTest";
         final File propsTest =
             booterSerializer.serialize( props, getProviderConfiguration(), startupConfiguration, aTest, false, null );

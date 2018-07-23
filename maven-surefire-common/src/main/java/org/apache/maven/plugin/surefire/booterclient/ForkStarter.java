@@ -54,6 +54,8 @@ import javax.annotation.Nonnull;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+//import java.nio.file.Files;
+//import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
@@ -81,6 +83,8 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.maven.plugin.surefire.AbstractSurefireMojo.createCopyAndReplaceForkNumPlaceholder;
 import static org.apache.maven.plugin.surefire.SurefireHelper.DUMP_FILE_PREFIX;
+//import static org.apache.maven.plugin.surefire.SurefireHelper.commandLineOptions;
+//import static org.apache.maven.plugin.surefire.SurefireHelper.logDebugOrCliShowErrors;
 import static org.apache.maven.plugin.surefire.booterclient.ForkNumberBucket.drawNumber;
 import static org.apache.maven.plugin.surefire.booterclient.ForkNumberBucket.returnNumber;
 import static org.apache.maven.plugin.surefire.booterclient.lazytestprovider.TestLessInputStream
@@ -150,6 +154,8 @@ public class ForkStarter
 
     private final Collection<DefaultReporterFactory> defaultReporterFactories;
 
+    private final boolean enableDocker;
+
     /**
      * Closes stuff, with a shutdown hook to make sure things really get closed.
      */
@@ -162,7 +168,7 @@ public class ForkStarter
 
         private final Thread inputStreamCloserHook;
 
-        CloseableCloser( int jvmRun, Closeable... testProvidingInputStream )
+        public CloseableCloser( int jvmRun, Closeable... testProvidingInputStream )
         {
             this.jvmRun = jvmRun;
             this.testProvidingInputStream = new ConcurrentLinkedQueue<Closeable>();
@@ -217,7 +223,8 @@ public class ForkStarter
 
     public ForkStarter( ProviderConfiguration providerConfiguration, StartupConfiguration startupConfiguration,
                         ForkConfiguration forkConfiguration, int forkedProcessTimeoutInSeconds,
-                        StartupReportConfiguration startupReportConfiguration, ConsoleLogger log )
+                        StartupReportConfiguration startupReportConfiguration, ConsoleLogger log ,
+                        boolean enableDocker )
     {
         this.forkConfiguration = forkConfiguration;
         this.providerConfiguration = providerConfiguration;
@@ -225,6 +232,7 @@ public class ForkStarter
         this.startupConfiguration = startupConfiguration;
         this.startupReportConfiguration = startupReportConfiguration;
         this.log = log;
+        this.enableDocker = enableDocker;
         defaultReporterFactory = new DefaultReporterFactory( startupReportConfiguration, log );
         defaultReporterFactory.runStarting();
         defaultReporterFactories = new ConcurrentLinkedQueue<DefaultReporterFactory>();
@@ -550,7 +558,7 @@ public class ForkStarter
         try
         {
             tempDir = forkConfiguration.getTempDirectory().getCanonicalPath();
-            BooterSerializer booterSerializer = new BooterSerializer( forkConfiguration );
+            BooterSerializer booterSerializer = new BooterSerializer( forkConfiguration, enableDocker );
             Long pluginPid = forkConfiguration.getPluginPlatform().getPluginPid();
             surefireProperties = booterSerializer.serialize( providerProperties, providerConfiguration,
                     startupConfiguration, testSet, readTestsFromInStream, pluginPid );
@@ -577,25 +585,64 @@ public class ForkStarter
         }
 
 
+        OutputStreamFlushableCommandline cli = forkConfiguration.createCommandLine( startupConfiguration, forkNumber,
+                enableDocker );
 
-        OutputStreamFlushableCommandline cli = forkConfiguration.createCommandLine( startupConfiguration, forkNumber );
+        System.out.println( "cli before fork Starter: " + cli );
 
-        if ( testProvidingInputStream != null )
+        // When docker is enabled change the cli to  the docker syntax.
+        if ( enableDocker )
         {
-            testProvidingInputStream.setFlushReceiverProvider( cli );
+            String cliString = cli.toString();
+            System.out.println( cliString );
+            String commandLine = "";
+
+            commandLine += " /tempDir/ " + DUMP_FILE_PREFIX + forkNumber + " "
+                    + surefireProperties.getName();
+
+            if ( systPropsFile != null )
+            {
+                commandLine += " " + systPropsFile.getName();
+            }
+
+
+            cli.createArg().setLine( commandLine );
+        }
+        else
+        {
+            if ( testProvidingInputStream != null )
+            {
+                testProvidingInputStream.setFlushReceiverProvider( cli );
+            }
+
+            cli.createArg().setValue( tempDir );
+            cli.createArg().setValue( DUMP_FILE_PREFIX + forkNumber );
+            cli.createArg().setValue( surefireProperties.getName() );
+            if ( systPropsFile != null )
+            {
+                cli.createArg().setValue( systPropsFile.getName() );
+            }
+
         }
 
-        cli.createArg().setValue( tempDir );
-        cli.createArg().setValue( DUMP_FILE_PREFIX + forkNumber );
-        cli.createArg().setValue( surefireProperties.getName() );
-        if ( systPropsFile != null )
+        System.out.println( "Complete commandline :" + cli );
+
+        // Interrupt the system for testing purposes.
+        try
         {
-            cli.createArg().setValue( systPropsFile.getName() );
+            final int zahl = 1000 * 60 * 1;
+            Thread.sleep( zahl );
         }
+        catch ( InterruptedException e )
+        {
+            e.printStackTrace();
+        }
+
 
         final ThreadedStreamConsumer threadedStreamConsumer = new ThreadedStreamConsumer( forkClient );
         final CloseableCloser closer = new CloseableCloser( forkNumber, threadedStreamConsumer,
                                                             requireNonNull( testProvidingInputStream, "null param" ) );
+
 
         log.debug( "Forking command line: " + cli );
 
@@ -613,7 +660,10 @@ public class ForkStarter
 
             currentForkClients.add( forkClient );
 
+            // Here the cli is called and the program waits for the tests to be done
             result = future.call();
+
+            System.out.println( "result of commandline: " + result );
 
             if ( forkClient.hadTimeout() )
             {

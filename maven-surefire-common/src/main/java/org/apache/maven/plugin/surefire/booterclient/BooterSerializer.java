@@ -20,11 +20,12 @@ package org.apache.maven.plugin.surefire.booterclient;
  */
 
 import org.apache.maven.plugin.surefire.SurefireProperties;
-import org.apache.maven.surefire.booter.AbstractPathConfiguration;
-import org.apache.maven.surefire.booter.ClassLoaderConfiguration;
+import org.apache.maven.surefire.booter.Classpath;
 import org.apache.maven.surefire.booter.KeyValueSource;
 import org.apache.maven.surefire.booter.ProviderConfiguration;
 import org.apache.maven.surefire.booter.StartupConfiguration;
+import org.apache.maven.surefire.booter.AbstractPathConfiguration;
+import org.apache.maven.surefire.booter.ClassLoaderConfiguration;
 import org.apache.maven.surefire.cli.CommandLineOption;
 import org.apache.maven.surefire.report.ReporterConfiguration;
 import org.apache.maven.surefire.testset.DirectoryScannerParameters;
@@ -36,6 +37,7 @@ import org.apache.maven.surefire.util.RunOrder;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 
 import static org.apache.maven.surefire.booter.AbstractPathConfiguration.CHILD_DELEGATION;
@@ -87,18 +89,75 @@ import static org.apache.maven.surefire.booter.SystemPropertyManager.writeProper
 class BooterSerializer
 {
     private final ForkConfiguration forkConfiguration;
+    private final boolean dockerEnabled;
 
-    BooterSerializer( ForkConfiguration forkConfiguration )
+    private final String windowsPathRepository = "file:/C:/Users/reinhart";
+    private final String dockerPathRepository = "/root";
+    private final String windowsPathTrunk = "file:/C:/noscan";
+    private final String dockerPathTrunk = "/workspace";
+
+
+
+    BooterSerializer( ForkConfiguration forkConfiguration, boolean dockerEnabled )
     {
         this.forkConfiguration = forkConfiguration;
+        this.dockerEnabled = false; // dockerEnabled;
+    }
+
+    private String rewriteForDocker( String originalPath )
+    {
+        if ( originalPath != null )
+        {
+            // Change each two backslashes to one forwardslash.
+            originalPath = originalPath.replace( "\\", "/" );
+
+            // Change uris to the docker path.
+            if ( originalPath.contains( windowsPathRepository ) )
+            {
+                originalPath = originalPath.replace( windowsPathRepository, dockerPathRepository );
+            }
+            else if ( originalPath.contains( windowsPathTrunk ) )
+            {
+                originalPath = originalPath.replace( windowsPathTrunk, dockerPathTrunk );
+            }
+
+        }
+
+        return originalPath;
+    }
+
+    private Classpath rewriteForDocker( Classpath cp )
+    {
+        //TODO insert a kind of configuration to get the new paths automatically.
+        Classpath newCp = Classpath.emptyClasspath();
+
+        System.out.println( "Here are the classpaths from the Booter Serializer" );
+
+        for ( Iterator<String> it = cp.iterator(); it.hasNext(); )
+        {
+            File file = new File( it.next() );
+            String uri = file.toURI().toASCIIString();
+
+            System.out.println( uri );
+
+            String newUri = rewriteForDocker( uri );
+
+            newCp = newCp.addClassPathElementUrl( newUri );
+
+        }
+
+        System.out.println( "after rewrite: " );
+        System.out.println( newCp.getClassPath() );
+
+        return newCp;
     }
 
     /**
      * Does not modify sourceProperties
      */
     File serialize( KeyValueSource sourceProperties, ProviderConfiguration booterConfiguration,
-                    StartupConfiguration providerConfiguration, Object testSet, boolean readTestsFromInStream,
-                    Long pid )
+                   StartupConfiguration providerConfiguration, Object testSet, boolean readTestsFromInStream,
+                   Long pid )
         throws IOException
     {
         SurefireProperties properties = new SurefireProperties( sourceProperties );
@@ -106,8 +165,10 @@ class BooterSerializer
         properties.setProperty( PLUGIN_PID, pid );
 
         AbstractPathConfiguration cp = providerConfiguration.getClasspathConfiguration();
-        properties.setClasspath( CLASSPATH, cp.getTestClasspath() );
-        properties.setClasspath( SUREFIRE_CLASSPATH, cp.getProviderClasspath() );
+        properties.setClasspath( CLASSPATH, dockerEnabled ? rewriteForDocker( cp.getTestClasspath() )
+                : cp.getTestClasspath() );
+        properties.setClasspath( SUREFIRE_CLASSPATH, dockerEnabled ? rewriteForDocker( cp.getProviderClasspath() )
+                : cp.getProviderClasspath() );
         properties.setProperty( ENABLE_ASSERTIONS, toString( cp.isEnableAssertions() ) );
         properties.setProperty( CHILD_DELEGATION, toString( cp.isChildDelegation() ) );
 
@@ -119,7 +180,8 @@ class BooterSerializer
         }
 
         properties.setProperty( FORKTESTSET_PREFER_TESTS_FROM_IN_STREAM, readTestsFromInStream );
-        properties.setNullableProperty( FORKTESTSET, getTypeEncoded( testSet ) );
+        properties.setNullableProperty( FORKTESTSET, dockerEnabled ? rewriteForDocker( getTypeEncoded( testSet ) )
+                : getTypeEncoded( testSet ) );
 
         TestRequest testSuiteDefinition = booterConfiguration.getTestSuiteDefinition();
         if ( testSuiteDefinition != null )
@@ -139,20 +201,26 @@ class BooterSerializer
             properties.addList( directoryScannerParameters.getIncludes(), INCLUDES_PROPERTY_PREFIX );
             properties.addList( directoryScannerParameters.getExcludes(), EXCLUDES_PROPERTY_PREFIX );
             properties.addList( directoryScannerParameters.getSpecificTests(), SPECIFIC_TEST_PROPERTY_PREFIX );
-            properties.setProperty( TEST_CLASSES_DIRECTORY, directoryScannerParameters.getTestClassesDirectory() );
+            properties.setProperty( TEST_CLASSES_DIRECTORY, dockerEnabled
+                    ? rewriteForDocker( directoryScannerParameters.getTestClassesDirectory().getPath() )
+                    :  directoryScannerParameters.getTestClassesDirectory().getPath() );
         }
 
         final RunOrderParameters runOrderParameters = booterConfiguration.getRunOrderParameters();
         if ( runOrderParameters != null )
         {
             properties.setProperty( RUN_ORDER, RunOrder.asString( runOrderParameters.getRunOrder() ) );
-            properties.setProperty( RUN_STATISTICS_FILE, runOrderParameters.getRunStatisticsFile() );
+            properties.setProperty( RUN_STATISTICS_FILE, dockerEnabled
+                    ? rewriteForDocker( runOrderParameters.getRunStatisticsFile().getPath() )
+                    : runOrderParameters.getRunStatisticsFile().getPath() );
         }
 
         ReporterConfiguration reporterConfiguration = booterConfiguration.getReporterConfiguration();
         boolean rep = reporterConfiguration.isTrimStackTrace();
         properties.setProperty( ISTRIMSTACKTRACE, rep );
-        properties.setProperty( REPORTSDIRECTORY, reporterConfiguration.getReportsDirectory() );
+        properties.setProperty( REPORTSDIRECTORY, dockerEnabled
+                ? rewriteForDocker( reporterConfiguration.getReportsDirectory().getPath() )
+                : reporterConfiguration.getReportsDirectory().getPath() );
         ClassLoaderConfiguration classLoaderConfig = providerConfiguration.getClassLoaderConfiguration();
         properties.setProperty( USESYSTEMCLASSLOADER, toString( classLoaderConfig.isUseSystemClassLoader() ) );
         properties.setProperty( USEMANIFESTONLYJAR, toString( classLoaderConfig.isUseManifestOnlyJar() ) );
