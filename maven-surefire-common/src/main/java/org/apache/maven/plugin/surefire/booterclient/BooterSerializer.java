@@ -91,9 +91,11 @@ class BooterSerializer
     private final ForkConfiguration forkConfiguration;
     private final boolean dockerEnabled;
 
-    private final String windowsPathRepository = "file:/C:/Users/reinhart";
+    private final String filePrefix = "file:/C:";
+    private final String pathPrefix = "C\\:";
+    private final String windowsPathRepository = "/Users/reinhart";
     private final String dockerPathRepository = "/root";
-    private final String windowsPathTrunk = "file:/C:/noscan";
+    private final String windowsPathTrunk = "/noscan";
     private final String dockerPathTrunk = "/workspace";
 
 
@@ -101,15 +103,25 @@ class BooterSerializer
     BooterSerializer( ForkConfiguration forkConfiguration, boolean dockerEnabled )
     {
         this.forkConfiguration = forkConfiguration;
-        this.dockerEnabled = false; // dockerEnabled;
+        this.dockerEnabled = dockerEnabled;
     }
 
-    private String rewriteForDocker( String originalPath )
+    private String rewriteStringForDocker( String originalPath )
     {
         if ( originalPath != null )
         {
             // Change each two backslashes to one forwardslash.
             originalPath = originalPath.replace( "\\", "/" );
+
+            // Delete the wrong prefixes.
+            if ( originalPath.contains( filePrefix ) )
+            {
+                originalPath.replace( filePrefix, "" );
+            }
+            else if ( originalPath.contains( pathPrefix ) )
+            {
+                originalPath.replace( pathPrefix, "" );
+            }
 
             // Change uris to the docker path.
             if ( originalPath.contains( windowsPathRepository ) )
@@ -131,7 +143,7 @@ class BooterSerializer
         //TODO insert a kind of configuration to get the new paths automatically.
         Classpath newCp = Classpath.emptyClasspath();
 
-        System.out.println( "Here are the classpaths from the Booter Serializer" );
+        System.out.println( "Here are the classpaths from the Booter Serializer in rewriteForDocker:" );
 
         for ( Iterator<String> it = cp.iterator(); it.hasNext(); )
         {
@@ -140,7 +152,7 @@ class BooterSerializer
 
             System.out.println( uri );
 
-            String newUri = rewriteForDocker( uri );
+            String newUri = rewriteStringForDocker( uri );
 
             newCp = newCp.addClassPathElementUrl( newUri );
 
@@ -180,7 +192,7 @@ class BooterSerializer
         }
 
         properties.setProperty( FORKTESTSET_PREFER_TESTS_FROM_IN_STREAM, readTestsFromInStream );
-        properties.setNullableProperty( FORKTESTSET, dockerEnabled ? rewriteForDocker( getTypeEncoded( testSet ) )
+        properties.setNullableProperty( FORKTESTSET, dockerEnabled ? rewriteStringForDocker( getTypeEncoded( testSet ) )
                 : getTypeEncoded( testSet ) );
 
         TestRequest testSuiteDefinition = booterConfiguration.getTestSuiteDefinition();
@@ -202,7 +214,7 @@ class BooterSerializer
             properties.addList( directoryScannerParameters.getExcludes(), EXCLUDES_PROPERTY_PREFIX );
             properties.addList( directoryScannerParameters.getSpecificTests(), SPECIFIC_TEST_PROPERTY_PREFIX );
             properties.setProperty( TEST_CLASSES_DIRECTORY, dockerEnabled
-                    ? rewriteForDocker( directoryScannerParameters.getTestClassesDirectory().getPath() )
+                    ? rewriteStringForDocker( directoryScannerParameters.getTestClassesDirectory().getPath() )
                     :  directoryScannerParameters.getTestClassesDirectory().getPath() );
         }
 
@@ -211,7 +223,7 @@ class BooterSerializer
         {
             properties.setProperty( RUN_ORDER, RunOrder.asString( runOrderParameters.getRunOrder() ) );
             properties.setProperty( RUN_STATISTICS_FILE, dockerEnabled
-                    ? rewriteForDocker( runOrderParameters.getRunStatisticsFile().getPath() )
+                    ? rewriteStringForDocker( runOrderParameters.getRunStatisticsFile().getPath() )
                     : runOrderParameters.getRunStatisticsFile().getPath() );
         }
 
@@ -219,7 +231,7 @@ class BooterSerializer
         boolean rep = reporterConfiguration.isTrimStackTrace();
         properties.setProperty( ISTRIMSTACKTRACE, rep );
         properties.setProperty( REPORTSDIRECTORY, dockerEnabled
-                ? rewriteForDocker( reporterConfiguration.getReportsDirectory().getPath() )
+                ? rewriteStringForDocker( reporterConfiguration.getReportsDirectory().getPath() )
                 : reporterConfiguration.getReportsDirectory().getPath() );
         ClassLoaderConfiguration classLoaderConfig = providerConfiguration.getClassLoaderConfiguration();
         properties.setProperty( USESYSTEMCLASSLOADER, toString( classLoaderConfig.isUseSystemClassLoader() ) );
