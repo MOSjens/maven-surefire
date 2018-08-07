@@ -588,8 +588,6 @@ public class ForkStarter
         OutputStreamFlushableCommandline cli = forkConfiguration.createCommandLine( startupConfiguration, forkNumber,
                 enableDocker );
 
-        System.out.println( "cli before fork Starter: " + cli );
-
         // When docker is enabled change the cli to  the docker syntax.
         if ( enableDocker )
         {
@@ -627,6 +625,7 @@ public class ForkStarter
 
         System.out.println( "Complete commandline :" + cli );
 
+        /*
         // Interrupt the system for testing purposes.
         try
         {
@@ -636,7 +635,7 @@ public class ForkStarter
         catch ( InterruptedException e )
         {
             e.printStackTrace();
-        }
+        }*/
 
 
         final ThreadedStreamConsumer threadedStreamConsumer = new ThreadedStreamConsumer( forkClient );

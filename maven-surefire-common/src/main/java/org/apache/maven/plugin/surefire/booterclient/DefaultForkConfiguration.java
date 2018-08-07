@@ -127,7 +127,7 @@ public abstract class DefaultForkConfiguration
                     + " --mount type=bind,source=\"C:/Users/reinhart/.m2\",target=/root/.m2 --mount type=bind,source="
                     + "\"C:/Users/reinhart/AppData/Local/Temp/"
                     + getTempDirectory().getName()
-                    + "\",target=/tempDir java:8";
+                    + "\",target=/tempDir openjdk:10";
 
             cli.createArg().setLine( commandLine );
         }

@@ -54,6 +54,7 @@ import org.apache.maven.plugin.surefire.log.PluginConsoleLogger;
 import org.apache.maven.plugin.surefire.log.api.ConsoleLogger;
 import org.apache.maven.plugin.surefire.util.DependencyScanner;
 import org.apache.maven.plugin.surefire.util.DirectoryScanner;
+import org.apache.maven.plugin.surefire.util.DockerUtil;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
@@ -1032,6 +1033,10 @@ public abstract class AbstractSurefireMojo
     private SurefireProperties setupProperties()
     {
         SurefireProperties sysProps = null;
+        Boolean enableDocker = getEnableDocker();
+        DockerUtil dockerUtil = new DockerUtil();
+
+
         try
         {
             sysProps = SurefireProperties.loadProperties( systemPropertiesFile );
@@ -1053,9 +1058,13 @@ public abstract class AbstractSurefireMojo
             SurefireProperties.calculateEffectiveProperties( getSystemProperties(), getSystemPropertyVariables(),
                                                              getUserProperties(), sysProps );
 
-        result.setProperty( "basedir", getBasedir().getAbsolutePath() );
-        result.setProperty( "user.dir", getWorkingDirectory().getAbsolutePath() );
-        result.setProperty( "localRepository", getLocalRepository().getBasedir() );
+        result.setProperty( "basedir", enableDocker ? dockerUtil.rewritePath( getBasedir().getAbsolutePath() )
+                : getBasedir().getAbsolutePath() );
+        result.setProperty( "user.dir", enableDocker ? dockerUtil.rewritePath( getWorkingDirectory().getAbsolutePath() )
+                : getWorkingDirectory().getAbsolutePath() );
+        result.setProperty( "localRepository", enableDocker ? dockerUtil.rewritePath( getLocalRepository().getBasedir() )
+                : getLocalRepository().getBasedir() );
+
         if ( isForking() )
         {
             for ( Object o : result.propertiesThatCannotBeSetASystemProperties() )
@@ -2068,9 +2077,6 @@ public abstract class AbstractSurefireMojo
     @Nonnull
     private ForkConfiguration getForkConfiguration() throws MojoFailureException
     {
-        System.out.println( "enableDocker: " );
-        System.out.println( getEnableDocker() );
-
         File tmpDir = getSurefireTempDir();
 
         Artifact shadeFire = getPluginArtifactMap().get( "org.apache.maven.surefire:surefire-shadefire" );
