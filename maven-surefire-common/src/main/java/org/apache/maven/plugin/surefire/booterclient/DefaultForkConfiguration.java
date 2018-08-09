@@ -22,6 +22,7 @@ package org.apache.maven.plugin.surefire.booterclient;
 import org.apache.maven.plugin.surefire.JdkAttributes;
 import org.apache.maven.plugin.surefire.booterclient.lazytestprovider.OutputStreamFlushableCommandline;
 import org.apache.maven.plugin.surefire.log.api.ConsoleLogger;
+import org.apache.maven.plugin.surefire.util.DockerUtil;
 import org.apache.maven.surefire.booter.AbstractPathConfiguration;
 import org.apache.maven.surefire.booter.Classpath;
 import org.apache.maven.surefire.booter.StartupConfiguration;
@@ -123,13 +124,12 @@ public abstract class DefaultForkConfiguration
         // When docker is enabled change the cli to  the docker syntax.
         if ( enableDocker )
         {
-            String commandLine = "docker run --rm --mount type=bind,source=\"C:/noscan\",target=/workspace"
+            String commandLine = "docker run --mount type=bind,source=\"C:/noscan\",target=/workspace"
                     + " --mount type=bind,source=\"C:/Users/reinhart/.m2\",target=/root/.m2 --mount type=bind,source="
                     + "\"C:/Users/reinhart/AppData/Local/Temp/"
                     + getTempDirectory().getName()
                     + "\",target=/tempDir openjdk:10";
-
-            cli.createArg().setLine( commandLine );
+            DockerUtil.addStringToDockerCommandlineScript( commandLine );
         }
         else
         {

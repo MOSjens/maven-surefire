@@ -90,9 +90,6 @@ class BooterSerializer
     private final ForkConfiguration forkConfiguration;
     private final boolean dockerEnabled;
 
-    private DockerUtil dockerUtil = new DockerUtil();
-
-
 
     BooterSerializer( ForkConfiguration forkConfiguration, boolean dockerEnabled )
     {
@@ -113,9 +110,9 @@ class BooterSerializer
         properties.setProperty( PLUGIN_PID, pid );
 
         AbstractPathConfiguration cp = providerConfiguration.getClasspathConfiguration();
-        properties.setClasspath( CLASSPATH, dockerEnabled ? dockerUtil.rewriteClasspath( cp.getTestClasspath() )
+        properties.setClasspath( CLASSPATH, dockerEnabled ? DockerUtil.rewriteClasspath( cp.getTestClasspath() )
                 : cp.getTestClasspath() );
-        properties.setClasspath( SUREFIRE_CLASSPATH, dockerEnabled ? dockerUtil.rewriteClasspath( cp.getProviderClasspath() )
+        properties.setClasspath( SUREFIRE_CLASSPATH, dockerEnabled ? DockerUtil.rewriteClasspath( cp.getProviderClasspath() )
                 : cp.getProviderClasspath() );
         properties.setProperty( ENABLE_ASSERTIONS, toString( cp.isEnableAssertions() ) );
         properties.setProperty( CHILD_DELEGATION, toString( cp.isChildDelegation() ) );
@@ -128,14 +125,14 @@ class BooterSerializer
         }
 
         properties.setProperty( FORKTESTSET_PREFER_TESTS_FROM_IN_STREAM, readTestsFromInStream );
-        properties.setNullableProperty( FORKTESTSET, dockerEnabled ? dockerUtil.rewritePath( getTypeEncoded( testSet ) )
+        properties.setNullableProperty( FORKTESTSET, dockerEnabled ? DockerUtil.rewritePath( getTypeEncoded( testSet ) )
                 : getTypeEncoded( testSet ) );
 
         TestRequest testSuiteDefinition = booterConfiguration.getTestSuiteDefinition();
         if ( testSuiteDefinition != null )
         {
             properties.setProperty( SOURCE_DIRECTORY, dockerEnabled ?
-                    dockerUtil.rewritePath( testSuiteDefinition.getTestSourceDirectory().getAbsolutePath() )
+                    DockerUtil.rewritePath( testSuiteDefinition.getTestSourceDirectory().getAbsolutePath() )
                     : testSuiteDefinition.getTestSourceDirectory().getAbsolutePath() );
             properties.addList( testSuiteDefinition.getSuiteXmlFiles(), TEST_SUITE_XML_FILES );
             TestListResolver testFilter = testSuiteDefinition.getTestListResolver();
@@ -152,7 +149,7 @@ class BooterSerializer
             properties.addList( directoryScannerParameters.getExcludes(), EXCLUDES_PROPERTY_PREFIX );
             properties.addList( directoryScannerParameters.getSpecificTests(), SPECIFIC_TEST_PROPERTY_PREFIX );
             properties.setProperty( TEST_CLASSES_DIRECTORY, dockerEnabled
-                    ? dockerUtil.rewritePath( directoryScannerParameters.getTestClassesDirectory().getPath() )
+                    ? DockerUtil.rewritePath( directoryScannerParameters.getTestClassesDirectory().getPath() )
                     :  directoryScannerParameters.getTestClassesDirectory().getPath() );
         }
 
@@ -161,7 +158,7 @@ class BooterSerializer
         {
             properties.setProperty( RUN_ORDER, RunOrder.asString( runOrderParameters.getRunOrder() ) );
             properties.setProperty( RUN_STATISTICS_FILE, dockerEnabled
-                    ? dockerUtil.rewritePath( runOrderParameters.getRunStatisticsFile().getPath() )
+                    ? DockerUtil.rewritePath( runOrderParameters.getRunStatisticsFile().getPath() )
                     : runOrderParameters.getRunStatisticsFile().getPath() );
         }
 
@@ -169,7 +166,7 @@ class BooterSerializer
         boolean rep = reporterConfiguration.isTrimStackTrace();
         properties.setProperty( ISTRIMSTACKTRACE, rep );
         properties.setProperty( REPORTSDIRECTORY, dockerEnabled
-                ? dockerUtil.rewritePath( reporterConfiguration.getReportsDirectory().getPath() )
+                ? DockerUtil.rewritePath( reporterConfiguration.getReportsDirectory().getPath() )
                 : reporterConfiguration.getReportsDirectory().getPath() );
         ClassLoaderConfiguration classLoaderConfig = providerConfiguration.getClassLoaderConfiguration();
         properties.setProperty( USESYSTEMCLASSLOADER, toString( classLoaderConfig.isUseSystemClassLoader() ) );

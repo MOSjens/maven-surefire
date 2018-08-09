@@ -21,6 +21,7 @@ package org.apache.maven.plugin.surefire.booterclient;
 
 import org.apache.maven.plugin.surefire.booterclient.lazytestprovider.OutputStreamFlushableCommandline;
 import org.apache.maven.plugin.surefire.log.api.ConsoleLogger;
+import org.apache.maven.plugin.surefire.util.DockerUtil;
 import org.apache.maven.surefire.booter.Classpath;
 import org.apache.maven.surefire.booter.StartupConfiguration;
 import org.apache.maven.surefire.booter.SurefireBooterForkException;
@@ -69,9 +70,10 @@ public final class DockerJarManifestForkConfiguration
         try
         {
             File jar = createJar( toCompleteClasspath( config ), booterThatHasMainMethod );
-            commandLine += " java -Xmx1g -Xms64m -Dfile.encoding=UTF-8 -jar ";
-            commandLine += "/tempDir/" + jar.getName();
-            cli.createArg().setLine( commandLine );
+            commandLine += " bin/bash -c \"cd /workspace/Cadenza/GISterm_ArcGis_Rest_Client;"
+                        + " java -Xmx1g -Xms64m -Dfile.encoding=UTF-8 -jar "
+                        + "/tempDir/" + jar.getName();
+            DockerUtil.addStringToDockerCommandlineScript( commandLine );
         }
         catch ( IOException e )
         {

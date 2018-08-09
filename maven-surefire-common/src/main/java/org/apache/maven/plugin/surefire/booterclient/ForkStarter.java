@@ -33,6 +33,7 @@ import org.apache.maven.plugin.surefire.booterclient.output.NativeStdErrStreamCo
 import org.apache.maven.plugin.surefire.booterclient.output.ThreadedStreamConsumer;
 import org.apache.maven.plugin.surefire.log.api.ConsoleLogger;
 import org.apache.maven.plugin.surefire.report.DefaultReporterFactory;
+import org.apache.maven.plugin.surefire.util.DockerUtil;
 import org.apache.maven.shared.utils.cli.CommandLineCallable;
 import org.apache.maven.shared.utils.cli.CommandLineException;
 import org.apache.maven.surefire.booter.AbstractPathConfiguration;
@@ -591,20 +592,21 @@ public class ForkStarter
         // When docker is enabled change the cli to  the docker syntax.
         if ( enableDocker )
         {
-            String cliString = cli.toString();
-            System.out.println( cliString );
             String commandLine = "";
 
             commandLine += " /tempDir/ " + DUMP_FILE_PREFIX + forkNumber + " "
                     + surefireProperties.getName();
-
             if ( systPropsFile != null )
             {
                 commandLine += " " + systPropsFile.getName();
             }
+            commandLine += "\"";
 
+            DockerUtil.addStringToDockerCommandlineScript( commandLine );
 
-            cli.createArg().setLine( commandLine );
+            DockerUtil.closeDocekrCommandlineScript();
+
+            cli.createArg().setLine( DockerUtil.getDockerCommandlineScriptPath() );
         }
         else
         {
@@ -625,17 +627,17 @@ public class ForkStarter
 
         System.out.println( "Complete commandline :" + cli );
 
-        /*
+
         // Interrupt the system for testing purposes.
         try
         {
-            final int zahl = 1000 * 60 * 1;
+            final int zahl = 1000 * 60 * 0;
             Thread.sleep( zahl );
         }
         catch ( InterruptedException e )
         {
             e.printStackTrace();
-        }*/
+        }
 
 
         final ThreadedStreamConsumer threadedStreamConsumer = new ThreadedStreamConsumer( forkClient );

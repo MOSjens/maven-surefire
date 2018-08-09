@@ -22,20 +22,27 @@ package org.apache.maven.plugin.surefire.util;
 import org.apache.maven.surefire.booter.Classpath;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Iterator;
 
 public class DockerUtil {
 
-    private final String windowsPathRepository = "C:/Users/reinhart";
-    private final String dockerPathRepository = "/root";
-    private final String windowsPathTrunk = "C:/noscan";
-    private final String dockerPathTrunk = "/workspace";
+    private static final String SCRIPT_NAME = "DockerCommandLine.bat";
+
+    static File file;
+    static FileWriter writer;
+
+    private static final String windowsPathRepository = "C:/Users/reinhart";
+    private static final String dockerPathRepository = "/root";
+    private static final String windowsPathTrunk = "C:/noscan";
+    private static final String dockerPathTrunk = "/workspace";
 
     public DockerUtil ()
     {
     }
 
-    public String rewritePath( String originalPath )
+    public static String rewritePath( String originalPath )
     {
         if ( originalPath != null )
         {
@@ -58,7 +65,7 @@ public class DockerUtil {
 
     }
 
-    public Classpath rewriteClasspath( Classpath cp )
+    public static Classpath rewriteClasspath( Classpath cp )
     {
         //TODO insert a kind of configuration to get the new paths automatically.
         Classpath newCp = Classpath.emptyClasspath();
@@ -75,5 +82,38 @@ public class DockerUtil {
         }
 
         return newCp;
+    }
+
+    public static void addStringToDockerCommandlineScript( String command )
+    {
+        try
+        {
+            if ( file == null || writer == null )
+            {
+                file = new File( SCRIPT_NAME );
+                file.setWritable( true );
+                file.setReadable( true );
+                writer = new FileWriter( file );
+            }
+            writer.write( command );
+        }
+        catch ( IOException e )
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public static String getDockerCommandlineScriptPath()
+    {
+        return file.getAbsolutePath();
+    }
+
+    public static void closeDocekrCommandlineScript()
+    {
+        try {
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
