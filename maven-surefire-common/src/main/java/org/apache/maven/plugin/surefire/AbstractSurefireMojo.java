@@ -1058,11 +1058,14 @@ public abstract class AbstractSurefireMojo
             SurefireProperties.calculateEffectiveProperties( getSystemProperties(), getSystemPropertyVariables(),
                                                              getUserProperties(), sysProps );
 
-        result.setProperty( "basedir", enableDocker ? dockerUtil.rewritePath( getBasedir().getAbsolutePath() )
+        result.setProperty( "basedir", enableDocker
+                ? dockerUtil.rewritePath( getBasedir().getAbsolutePath() )
                 : getBasedir().getAbsolutePath() );
-        result.setProperty( "user.dir", enableDocker ? dockerUtil.rewritePath( getWorkingDirectory().getAbsolutePath() )
+        result.setProperty( "user.dir", enableDocker
+                ? dockerUtil.rewritePath( getWorkingDirectory().getAbsolutePath() )
                 : getWorkingDirectory().getAbsolutePath() );
-        result.setProperty( "localRepository", enableDocker ? dockerUtil.rewritePath( getLocalRepository().getBasedir() )
+        result.setProperty( "localRepository", enableDocker
+                ? dockerUtil.rewritePath( getLocalRepository().getBasedir() )
                 : getLocalRepository().getBasedir() );
 
         if ( isForking() )

@@ -26,17 +26,23 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class DockerUtil {
+/**
+ * Changes the command line to execute the integration tests on a docker container
+ *
+ * @author Jens Reinhart
+ */
+public class DockerUtil
+{
 
     private static final String SCRIPT_NAME = "DockerCommandLine.bat";
 
+    private static final String WINDOWS_PATH_REPOSITORY = "C:/Users/reinhart";
+    private static final String DOCKER_PATH_REPOSITORY = "/root";
+    private static final String WINDOWS_PATH_TRUNK = "C:/noscan";
+    private static final String DOCKER_PATH_TRUNK = "/workspace";
+
     static File file;
     static FileWriter writer;
-
-    private static final String windowsPathRepository = "C:/Users/reinhart";
-    private static final String dockerPathRepository = "/root";
-    private static final String windowsPathTrunk = "C:/noscan";
-    private static final String dockerPathTrunk = "/workspace";
 
     public DockerUtil ()
     {
@@ -50,13 +56,13 @@ public class DockerUtil {
             originalPath = originalPath.replace( "\\", "/" );
 
             // Change uris to the docker path.
-            if ( originalPath.contains( windowsPathRepository ) )
+            if ( originalPath.contains( WINDOWS_PATH_REPOSITORY ) )
             {
-                originalPath = originalPath.replace( windowsPathRepository, dockerPathRepository );
+                originalPath = originalPath.replace( WINDOWS_PATH_REPOSITORY, DOCKER_PATH_REPOSITORY );
             }
-            else if ( originalPath.contains( windowsPathTrunk ) )
+            else if ( originalPath.contains( WINDOWS_PATH_TRUNK ) )
             {
-                originalPath = originalPath.replace( windowsPathTrunk, dockerPathTrunk );
+                originalPath = originalPath.replace( WINDOWS_PATH_TRUNK, DOCKER_PATH_TRUNK );
             }
 
         }
@@ -70,7 +76,7 @@ public class DockerUtil {
         //TODO insert a kind of configuration to get the new paths automatically.
         Classpath newCp = Classpath.emptyClasspath();
 
-        for (Iterator<String> it = cp.iterator(); it.hasNext(); )
+        for ( Iterator<String> it = cp.iterator(); it.hasNext(); )
         {
             File file = new File( it.next() );
             String uri = file.getAbsolutePath();
@@ -110,9 +116,12 @@ public class DockerUtil {
 
     public static void closeDocekrCommandlineScript()
     {
-        try {
+        try
+        {
             writer.close();
-        } catch (IOException e) {
+        }
+        catch ( IOException e )
+        {
             e.printStackTrace();
         }
     }

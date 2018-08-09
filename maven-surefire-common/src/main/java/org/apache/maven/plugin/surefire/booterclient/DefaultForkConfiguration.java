@@ -124,7 +124,7 @@ public abstract class DefaultForkConfiguration
         // When docker is enabled change the cli to  the docker syntax.
         if ( enableDocker )
         {
-            String commandLine = "docker run --mount type=bind,source=\"C:/noscan\",target=/workspace"
+            String commandLine = "docker run --rm --mount type=bind,source=\"C:/noscan\",target=/workspace"
                     + " --mount type=bind,source=\"C:/Users/reinhart/.m2\",target=/root/.m2 --mount type=bind,source="
                     + "\"C:/Users/reinhart/AppData/Local/Temp/"
                     + getTempDirectory().getName()

@@ -37,7 +37,7 @@ abstract class AbstractClasspathForkConfiguration
 {
 
     @SuppressWarnings( "checkstyle:parameternumber" )
-    public AbstractClasspathForkConfiguration( @Nonnull Classpath bootClasspath,
+    AbstractClasspathForkConfiguration( @Nonnull Classpath bootClasspath,
                                                @Nonnull File tempDirectory,
                                                @Nullable String debugLine,
                                                @Nonnull File workingDirectory,

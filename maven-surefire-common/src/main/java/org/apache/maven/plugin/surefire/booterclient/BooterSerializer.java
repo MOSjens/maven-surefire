@@ -112,7 +112,8 @@ class BooterSerializer
         AbstractPathConfiguration cp = providerConfiguration.getClasspathConfiguration();
         properties.setClasspath( CLASSPATH, dockerEnabled ? DockerUtil.rewriteClasspath( cp.getTestClasspath() )
                 : cp.getTestClasspath() );
-        properties.setClasspath( SUREFIRE_CLASSPATH, dockerEnabled ? DockerUtil.rewriteClasspath( cp.getProviderClasspath() )
+        properties.setClasspath( SUREFIRE_CLASSPATH, dockerEnabled
+                ? DockerUtil.rewriteClasspath( cp.getProviderClasspath() )
                 : cp.getProviderClasspath() );
         properties.setProperty( ENABLE_ASSERTIONS, toString( cp.isEnableAssertions() ) );
         properties.setProperty( CHILD_DELEGATION, toString( cp.isChildDelegation() ) );
@@ -131,8 +132,8 @@ class BooterSerializer
         TestRequest testSuiteDefinition = booterConfiguration.getTestSuiteDefinition();
         if ( testSuiteDefinition != null )
         {
-            properties.setProperty( SOURCE_DIRECTORY, dockerEnabled ?
-                    DockerUtil.rewritePath( testSuiteDefinition.getTestSourceDirectory().getAbsolutePath() )
+            properties.setProperty( SOURCE_DIRECTORY, dockerEnabled
+                    ? DockerUtil.rewritePath( testSuiteDefinition.getTestSourceDirectory().getAbsolutePath() )
                     : testSuiteDefinition.getTestSourceDirectory().getAbsolutePath() );
             properties.addList( testSuiteDefinition.getSuiteXmlFiles(), TEST_SUITE_XML_FILES );
             TestListResolver testFilter = testSuiteDefinition.getTestListResolver();
