@@ -157,6 +157,8 @@ public class ForkStarter
 
     private final boolean enableDocker;
 
+    private final DockerUtil dockerUtil;
+
     /**
      * Closes stuff, with a shutdown hook to make sure things really get closed.
      */
@@ -225,7 +227,7 @@ public class ForkStarter
     public ForkStarter( ProviderConfiguration providerConfiguration, StartupConfiguration startupConfiguration,
                         ForkConfiguration forkConfiguration, int forkedProcessTimeoutInSeconds,
                         StartupReportConfiguration startupReportConfiguration, ConsoleLogger log ,
-                        boolean enableDocker )
+                        boolean enableDocker, DockerUtil dockerUtil )
     {
         this.forkConfiguration = forkConfiguration;
         this.providerConfiguration = providerConfiguration;
@@ -234,6 +236,7 @@ public class ForkStarter
         this.startupReportConfiguration = startupReportConfiguration;
         this.log = log;
         this.enableDocker = enableDocker;
+        this.dockerUtil = dockerUtil;
         defaultReporterFactory = new DefaultReporterFactory( startupReportConfiguration, log );
         defaultReporterFactory.runStarting();
         defaultReporterFactories = new ConcurrentLinkedQueue<DefaultReporterFactory>();
@@ -559,7 +562,7 @@ public class ForkStarter
         try
         {
             tempDir = forkConfiguration.getTempDirectory().getCanonicalPath();
-            BooterSerializer booterSerializer = new BooterSerializer( forkConfiguration, enableDocker );
+            BooterSerializer booterSerializer = new BooterSerializer( forkConfiguration, enableDocker, dockerUtil );
             Long pluginPid = forkConfiguration.getPluginPlatform().getPluginPid();
             surefireProperties = booterSerializer.serialize( providerProperties, providerConfiguration,
                     startupConfiguration, testSet, readTestsFromInStream, pluginPid );
@@ -587,7 +590,7 @@ public class ForkStarter
 
 
         OutputStreamFlushableCommandline cli = forkConfiguration.createCommandLine( startupConfiguration, forkNumber,
-                enableDocker );
+                enableDocker, dockerUtil );
 
         // When docker is enabled change the cli to  the docker syntax.
         if ( enableDocker )
@@ -602,11 +605,11 @@ public class ForkStarter
             }
             commandLine += "\"";
 
-            DockerUtil.addStringToDockerCommandlineScript( commandLine );
+            dockerUtil.addStringToDockerCommandlineScript( commandLine );
 
-            DockerUtil.closeDocekrCommandlineScript();
+            dockerUtil.closeDocekrCommandlineScript();
 
-            cli.createArg().setLine( DockerUtil.getDockerCommandlineScriptPath() );
+            cli.createArg().setLine( dockerUtil.getDockerCommandlineScriptPath() );
         }
         else
         {

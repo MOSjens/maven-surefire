@@ -34,21 +34,21 @@ import java.util.Iterator;
 public class DockerUtil
 {
 
-    private static final String SCRIPT_NAME = "DockerCommandLine.bat";
+    private final String scriptName = "DockerCommandLine.bat";
 
-    private static final String WINDOWS_PATH_REPOSITORY = "C:/Users/reinhart";
-    private static final String DOCKER_PATH_REPOSITORY = "/root";
-    private static final String WINDOWS_PATH_TRUNK = "C:/noscan";
-    private static final String DOCKER_PATH_TRUNK = "/workspace";
+    private final String windowsPathRepository = "C:/Users/reinhart";
+    private final String dockerPathRepository = "/root";
+    private final String windowsPathTrunk = "C:/noscan";
+    private final String dockerPathTrunk = "/workspace";
 
-    static File file;
-    static FileWriter writer;
+    File file;
+    FileWriter writer;
 
     public DockerUtil ()
     {
     }
 
-    public static String rewritePath( String originalPath )
+    public String rewritePath( String originalPath )
     {
         if ( originalPath != null )
         {
@@ -56,13 +56,13 @@ public class DockerUtil
             originalPath = originalPath.replace( "\\", "/" );
 
             // Change uris to the docker path.
-            if ( originalPath.contains( WINDOWS_PATH_REPOSITORY ) )
+            if ( originalPath.contains( windowsPathRepository ) )
             {
-                originalPath = originalPath.replace( WINDOWS_PATH_REPOSITORY, DOCKER_PATH_REPOSITORY );
+                originalPath = originalPath.replace( windowsPathRepository, dockerPathRepository );
             }
-            else if ( originalPath.contains( WINDOWS_PATH_TRUNK ) )
+            else if ( originalPath.contains( windowsPathTrunk ) )
             {
-                originalPath = originalPath.replace( WINDOWS_PATH_TRUNK, DOCKER_PATH_TRUNK );
+                originalPath = originalPath.replace( windowsPathTrunk, dockerPathTrunk );
             }
 
         }
@@ -71,7 +71,7 @@ public class DockerUtil
 
     }
 
-    public static Classpath rewriteClasspath( Classpath cp )
+    public Classpath rewriteClasspath( Classpath cp )
     {
         //TODO insert a kind of configuration to get the new paths automatically.
         Classpath newCp = Classpath.emptyClasspath();
@@ -90,13 +90,13 @@ public class DockerUtil
         return newCp;
     }
 
-    public static void addStringToDockerCommandlineScript( String command )
+    public void addStringToDockerCommandlineScript( String command )
     {
         try
         {
             if ( file == null || writer == null )
             {
-                file = new File( SCRIPT_NAME );
+                file = new File( scriptName );
                 file.setWritable( true );
                 file.setReadable( true );
                 writer = new FileWriter( file );
@@ -109,12 +109,12 @@ public class DockerUtil
         }
     }
 
-    public static String getDockerCommandlineScriptPath()
+    public String getDockerCommandlineScriptPath()
     {
         return file.getAbsolutePath();
     }
 
-    public static void closeDocekrCommandlineScript()
+    public void closeDocekrCommandlineScript()
     {
         try
         {

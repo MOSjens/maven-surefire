@@ -21,6 +21,7 @@ package org.apache.maven.plugin.surefire.booterclient;
 
 import org.apache.maven.plugin.surefire.JdkAttributes;
 import org.apache.maven.plugin.surefire.booterclient.lazytestprovider.OutputStreamFlushableCommandline;
+import org.apache.maven.plugin.surefire.util.DockerUtil;
 import org.apache.maven.surefire.booter.Classpath;
 import org.apache.maven.surefire.booter.ForkedBooter;
 import org.apache.maven.surefire.booter.StartupConfiguration;
@@ -62,6 +63,7 @@ public abstract class ForkConfiguration
     @Nonnull
     public abstract OutputStreamFlushableCommandline createCommandLine( @Nonnull StartupConfiguration config,
                                                                         int forkNumber,
-                                                                        boolean enableDocker )
+                                                                        boolean enableDocker,
+                                                                        DockerUtil dockerUtil )
             throws SurefireBooterForkException;
 }

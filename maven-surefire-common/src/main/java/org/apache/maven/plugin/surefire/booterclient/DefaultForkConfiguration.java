@@ -114,7 +114,7 @@ public abstract class DefaultForkConfiguration
     @Nonnull
     @Override
     public OutputStreamFlushableCommandline createCommandLine( @Nonnull StartupConfiguration config, int forkNumber,
-                                                               boolean enableDocker )
+                                                               boolean enableDocker, DockerUtil dockerUtil )
             throws SurefireBooterForkException
     {
         OutputStreamFlushableCommandline cli = new OutputStreamFlushableCommandline();
@@ -129,7 +129,7 @@ public abstract class DefaultForkConfiguration
                     + "\"C:/Users/reinhart/AppData/Local/Temp/"
                     + getTempDirectory().getName()
                     + "\",target=/tempDir openjdk:10";
-            DockerUtil.addStringToDockerCommandlineScript( commandLine );
+            dockerUtil.addStringToDockerCommandlineScript( commandLine );
         }
         else
         {
