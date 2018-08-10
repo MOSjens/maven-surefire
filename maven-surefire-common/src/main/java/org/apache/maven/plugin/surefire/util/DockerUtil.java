@@ -27,7 +27,9 @@ import java.io.IOException;
 import java.util.Iterator;
 
 /**
- * Changes the command line to execute the integration tests on a docker container
+ * Changes the command line to execute the integration tests on a docker container. Instead of building the
+ * command line with a cli object the command line for docker is saved in a script and the script is passed
+ * to the cmd. The order of the commands is important and must not be changed.
  *
  * @author Jens Reinhart
  */
@@ -36,16 +38,20 @@ public class DockerUtil
 
     private final String scriptName = "DockerCommandLine.bat";
 
-    private final String windowsPathRepository = "C:/Users/reinhart";
-    private final String dockerPathRepository = "/root";
-    private final String windowsPathTrunk = "C:/noscan";
+    private final String dockerImage = "openjdk:10";
+
+    private final String windowsPathRepository; // "C:/Users/reinhart/.m2/Repository";
+    private final String dockerPathRepository = "/repository";
+    private final String windowsPathTrunk; // "C:\\noscan\\Cadenza\\GISterm_ArcGis_Rest_Client";
     private final String dockerPathTrunk = "/workspace";
 
     File file;
     FileWriter writer;
 
-    public DockerUtil ()
+    public DockerUtil ( String baseDir, String localRepository )
     {
+        this.windowsPathTrunk = baseDir;
+        this.windowsPathRepository = localRepository;
     }
 
     public String rewritePath( String originalPath )
@@ -54,21 +60,28 @@ public class DockerUtil
         {
             // Change each backslash to a forwardslash.
             originalPath = originalPath.replace( "\\", "/" );
+            String repositoryPath = windowsPathRepository.replace( "\\", "/" );
+            String trunkPath = windowsPathTrunk.replace( "\\", "/" );
 
             // Change uris to the docker path.
-            if ( originalPath.contains( windowsPathRepository ) )
+            if ( originalPath.contains( repositoryPath ) )
             {
-                originalPath = originalPath.replace( windowsPathRepository, dockerPathRepository );
+                originalPath = originalPath.replace( repositoryPath, dockerPathRepository );
             }
-            else if ( originalPath.contains( windowsPathTrunk ) )
+            else if ( originalPath.contains( trunkPath ) )
             {
-                originalPath = originalPath.replace( windowsPathTrunk, dockerPathTrunk );
+                originalPath = originalPath.replace( trunkPath, dockerPathTrunk );
             }
 
         }
 
         return originalPath;
 
+    }
+
+    public String rewriteJarPath( String originalPath )
+    {
+        return rewritePath( originalPath.replaceFirst( "/", "" ) );
     }
 
     public Classpath rewriteClasspath( Classpath cp )
@@ -109,6 +122,41 @@ public class DockerUtil
         }
     }
 
+    public void addDockerCommandToCommandLineScript()
+    {
+        addStringToDockerCommandlineScript( "docker run --rm " );
+    }
+
+    public void addDockerMountRepositoryToCommandLineScript()
+    {
+        addDockerMountToCommandLineScript( windowsPathRepository, dockerPathRepository );
+    }
+
+    public void addDockerMountBaseDirToCommandLineScript()
+    {
+        addDockerMountToCommandLineScript( windowsPathTrunk, dockerPathTrunk );
+    }
+
+    public void addDockerMountToCommandLineScript( String source, String target )
+    {
+        String command = "--mount type=bind,source=\""
+                + source
+                + "\",target=\""
+                + target
+                + "\" ";
+        addStringToDockerCommandlineScript( command );
+    }
+
+    public void addDockerImageToCommandLineScript()
+    {
+        addStringToDockerCommandlineScript( dockerImage + " " );
+    }
+
+    public void addChangeToBaseDirToCommandLineScript()
+    {
+        addStringToDockerCommandlineScript( " bin/bash -c \"cd " + dockerPathTrunk + "; " );
+    }
+
     public String getDockerCommandlineScriptPath()
     {
         return file.getAbsolutePath();
@@ -124,5 +172,15 @@ public class DockerUtil
         {
             e.printStackTrace();
         }
+    }
+
+    public String getWindowsPathRepository()
+    {
+        return windowsPathRepository;
+    }
+
+    public String getWindiowsPathTrunk()
+    {
+        return windowsPathTrunk;
     }
 }

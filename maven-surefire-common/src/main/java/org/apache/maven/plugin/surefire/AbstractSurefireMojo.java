@@ -158,7 +158,6 @@ public abstract class AbstractSurefireMojo
     private static final File SYSTEM_TMP_DIR = new File( System.getProperty( "java.io.tmpdir" ) );
 
     private final ProviderDetector providerDetector = new ProviderDetector();
-    private final DockerUtil dockerUtil = new DockerUtil();
 
     /**
      * Information about this plugin, mainly used to lookup this plugin's configuration from the currently executing
@@ -832,6 +831,10 @@ public abstract class AbstractSurefireMojo
 
     private volatile PluginConsoleLogger consoleLogger;
 
+    private DockerUtil dockerUtil;
+
+
+
     @Override
     public void execute()
         throws MojoExecutionException, MojoFailureException
@@ -879,6 +882,7 @@ public abstract class AbstractSurefireMojo
         createDependencyResolver();
         surefireBooterArtifact = getSurefireBooterArtifact();
         toolchain = getToolchain();
+        dockerUtil = new DockerUtil( getBasedir().getPath(), getLocalRepository().getBasedir() );
     }
 
     @Nonnull
@@ -2057,6 +2061,7 @@ public abstract class AbstractSurefireMojo
         StartupReportConfiguration startupReportConfiguration = getStartupReportConfiguration( configChecksum );
         ProviderConfiguration providerConfiguration = createProviderConfiguration( runOrderParameters );
         boolean enableDocker = getEnableDocker();
+        //dockerUtil = new DockerUtil( getBasedir().getPath(), getLocalRepository().getBasedir() );
         System.out.println( "Base Dir: " + getBasedir().getPath() );
         System.out.println( "local Repository: " + getLocalRepository().getBasedir() );
         return new ForkStarter( providerConfiguration, startupConfiguration, forkConfiguration,

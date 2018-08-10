@@ -634,7 +634,7 @@ public class ForkStarter
         // Interrupt the system for testing purposes.
         try
         {
-            final int zahl = 1000 * 60 * 0;
+            final int zahl = 1000 * 60 * 1;
             Thread.sleep( zahl );
         }
         catch ( InterruptedException e )

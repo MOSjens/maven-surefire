@@ -124,12 +124,36 @@ public abstract class DefaultForkConfiguration
         // When docker is enabled change the cli to  the docker syntax.
         if ( enableDocker )
         {
-            String commandLine = "docker run --rm --mount type=bind,source=\"C:/noscan\",target=/workspace"
-                    + " --mount type=bind,source=\"C:/Users/reinhart/.m2\",target=/root/.m2 --mount type=bind,source="
-                    + "\"C:/Users/reinhart/AppData/Local/Temp/"
-                    + getTempDirectory().getName()
-                    + "\",target=/tempDir openjdk:10";
-            dockerUtil.addStringToDockerCommandlineScript( commandLine );
+            // The order must not be changed.
+            dockerUtil.addDockerCommandToCommandLineScript();
+            //dockerUtil.addDockerMountToCommandLineScript( "C:/noscan/Cadenza/GISterm_ArcGis_Rest_Client",
+            //"/workspace" );
+            dockerUtil.addDockerMountBaseDirToCommandLineScript();
+            //dockerUtil.addDockerMountToCommandLineScript( "C:/Users/reinhart/.m2", "/root/.m2" );
+            dockerUtil.addDockerMountRepositoryToCommandLineScript();
+            dockerUtil.addDockerMountToCommandLineScript( getTempDirectory().getPath(), "/tempDir" );
+            dockerUtil.addDockerImageToCommandLineScript();
+            dockerUtil.addChangeToBaseDirToCommandLineScript();
+
+            String javaCommand = "";
+            for ( Entry<String, String> entry : getEnvironmentVariables().entrySet() )
+            {
+                String value = entry.getValue();
+                javaCommand += ( value == null ? "" : value );
+            }
+
+            String jvmArgLine = newJvmArgLine( forkNumber );
+            if ( !jvmArgLine.isEmpty() )
+            {
+                javaCommand += jvmArgLine;
+            }
+
+            if ( getDebugLine() != null && !getDebugLine().isEmpty() )
+            {
+                javaCommand += getDebugLine();
+            }
+
+            dockerUtil.addStringToDockerCommandlineScript( "java " + javaCommand );
         }
         else
         {

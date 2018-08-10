@@ -68,14 +68,10 @@ public final class DockerJarManifestForkConfiguration
                                      @Nonnull StartupConfiguration config )
             throws SurefireBooterForkException
     {
-        String commandLine = "";
         try
         {
             File jar = createJar( toCompleteClasspath( config ), booterThatHasMainMethod );
-            commandLine += " bin/bash -c \"cd /workspace/Cadenza/GISterm_ArcGis_Rest_Client;"
-                        + " java -Xmx1g -Xms64m -Dfile.encoding=UTF-8 -jar "
-                        + "/tempDir/" + jar.getName();
-            dockerUtil.addStringToDockerCommandlineScript( commandLine );
+            dockerUtil.addStringToDockerCommandlineScript( " -jar /tempDir/" + jar.getName() );
         }
         catch ( IOException e )
         {
@@ -119,16 +115,18 @@ public final class DockerJarManifestForkConfiguration
                 File file1 = new File( it.next() );
                 String uri = file1.toURI().toASCIIString();
 
+                uri = dockerUtil.rewriteJarPath( uri );
 
-                // Change uris to the docker path.
-                if ( uri.contains( "C:/noscan" ) )
+
+                /* Change uris to the docker path.
+                if ( uri.contains( "C:/noscan/Cadenza/GISterm_ArcGis_Rest_Client" ) )
                 {
-                    uri = uri.replace( "C:/noscan", "workspace" );
+                    uri = uri.replace( "C:/noscan/Cadenza/GISterm_ArcGis_Rest_Client", "workspace" );
                 }
                 else if ( uri.contains( "C:/Users/reinhart" ) )
                 {
                     uri = uri.replace( "C:/Users/reinhart", "root" );
-                }
+                }*/
 
                 cp.append( uri );
                 if ( file1.isDirectory() && !uri.endsWith( "/" ) )
