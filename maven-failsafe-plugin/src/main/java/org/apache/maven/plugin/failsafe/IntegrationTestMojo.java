@@ -391,7 +391,6 @@ public class IntegrationTestMojo
     protected void handleSummary( RunResult summary, Exception firstForkException )
             throws MojoExecutionException, MojoFailureException
     {
-        System.out.println( getEnableDocker() );
         File summaryFile = getSummaryFile();
         if ( !summaryFile.getParentFile().isDirectory() )
         {

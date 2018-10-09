@@ -123,8 +123,6 @@ public final class ThreadedStreamConsumer
 
         try
         {
-            // For testing purposes :
-            System.out.println( s );
             items.put( s );
         }
         catch ( InterruptedException e )

@@ -882,7 +882,8 @@ public abstract class AbstractSurefireMojo
         createDependencyResolver();
         surefireBooterArtifact = getSurefireBooterArtifact();
         toolchain = getToolchain();
-        dockerUtil = new DockerUtil( getBasedir().getPath(), getLocalRepository().getBasedir() );
+        dockerUtil = new DockerUtil( getBasedir().getPath(), getLocalRepository().getBasedir(),
+                getProject().getName() );
     }
 
     @Nonnull
@@ -2061,9 +2062,6 @@ public abstract class AbstractSurefireMojo
         StartupReportConfiguration startupReportConfiguration = getStartupReportConfiguration( configChecksum );
         ProviderConfiguration providerConfiguration = createProviderConfiguration( runOrderParameters );
         boolean enableDocker = getEnableDocker();
-        //dockerUtil = new DockerUtil( getBasedir().getPath(), getLocalRepository().getBasedir() );
-        System.out.println( "Base Dir: " + getBasedir().getPath() );
-        System.out.println( "local Repository: " + getLocalRepository().getBasedir() );
         return new ForkStarter( providerConfiguration, startupConfiguration, forkConfiguration,
                                 getForkedProcessTimeoutInSeconds(), startupReportConfiguration,
                                 log, enableDocker, dockerUtil );

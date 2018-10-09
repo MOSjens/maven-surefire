@@ -117,17 +117,6 @@ public final class DockerJarManifestForkConfiguration
 
                 uri = dockerUtil.rewriteJarPath( uri );
 
-
-                /* Change uris to the docker path.
-                if ( uri.contains( "C:/noscan/Cadenza/GISterm_ArcGis_Rest_Client" ) )
-                {
-                    uri = uri.replace( "C:/noscan/Cadenza/GISterm_ArcGis_Rest_Client", "workspace" );
-                }
-                else if ( uri.contains( "C:/Users/reinhart" ) )
-                {
-                    uri = uri.replace( "C:/Users/reinhart", "root" );
-                }*/
-
                 cp.append( uri );
                 if ( file1.isDirectory() && !uri.endsWith( "/" ) )
                 {

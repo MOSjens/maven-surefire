@@ -628,20 +628,7 @@ public class ForkStarter
 
         }
 
-        System.out.println( "Complete commandline :" + cli );
-
-
-        // Interrupt the system for testing purposes.
-        try
-        {
-            final int zahl = 1000 * 60 * 1;
-            Thread.sleep( zahl );
-        }
-        catch ( InterruptedException e )
-        {
-            e.printStackTrace();
-        }
-
+        //System.out.println( "Complete commandline :" + cli );
 
         final ThreadedStreamConsumer threadedStreamConsumer = new ThreadedStreamConsumer( forkClient );
         final CloseableCloser closer = new CloseableCloser( forkNumber, threadedStreamConsumer,
@@ -668,6 +655,11 @@ public class ForkStarter
             result = future.call();
 
             System.out.println( "result of commandline: " + result );
+
+            if ( enableDocker )
+            {
+                dockerUtil.deleteDockerCommandlineScript();
+            }
 
             if ( forkClient.hadTimeout() )
             {

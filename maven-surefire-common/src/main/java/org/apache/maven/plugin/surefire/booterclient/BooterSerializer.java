@@ -108,7 +108,7 @@ class BooterSerializer
     {
         SurefireProperties properties = new SurefireProperties( sourceProperties );
 
-        properties.setProperty( PLUGIN_PID, pid );
+        properties.setProperty( PLUGIN_PID,  dockerEnabled ? 1L : pid );
 
         AbstractPathConfiguration cp = providerConfiguration.getClasspathConfiguration();
         properties.setClasspath( CLASSPATH, dockerEnabled ? dockerUtil.rewriteClasspath( cp.getTestClasspath() )

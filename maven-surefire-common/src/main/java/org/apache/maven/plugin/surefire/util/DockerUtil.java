@@ -36,7 +36,7 @@ import java.util.Iterator;
 public class DockerUtil
 {
 
-    private final String scriptName = "DockerCommandLine.bat";
+    private final String scriptName;
 
     private final String dockerImage = "openjdk:10";
 
@@ -44,14 +44,17 @@ public class DockerUtil
     private final String dockerPathRepository = "/repository";
     private final String windowsPathTrunk; // "C:\\noscan\\Cadenza\\GISterm_ArcGis_Rest_Client";
     private final String dockerPathTrunk = "/workspace";
+    private final String projectName;
 
     File file;
     FileWriter writer;
 
-    public DockerUtil ( String baseDir, String localRepository )
+    public DockerUtil ( String baseDir, String localRepository, String projectName )
     {
         this.windowsPathTrunk = baseDir;
         this.windowsPathRepository = localRepository;
+        this.projectName = projectName;
+        scriptName = projectName + "DockerCommandLine.bat";
     }
 
     public String rewritePath( String originalPath )
@@ -86,7 +89,6 @@ public class DockerUtil
 
     public Classpath rewriteClasspath( Classpath cp )
     {
-        //TODO insert a kind of configuration to get the new paths automatically.
         Classpath newCp = Classpath.emptyClasspath();
 
         for ( Iterator<String> it = cp.iterator(); it.hasNext(); )
@@ -172,6 +174,15 @@ public class DockerUtil
         {
             e.printStackTrace();
         }
+    }
+
+    public void deleteDockerCommandlineScript()
+    {
+        if ( writer != null )
+        {
+            closeDocekrCommandlineScript();
+        }
+        file.delete();
     }
 
     public String getWindowsPathRepository()
