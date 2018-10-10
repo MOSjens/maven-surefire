@@ -882,8 +882,8 @@ public abstract class AbstractSurefireMojo
         createDependencyResolver();
         surefireBooterArtifact = getSurefireBooterArtifact();
         toolchain = getToolchain();
-        dockerUtil = new DockerUtil( getBasedir().getPath(), getLocalRepository().getBasedir(),
-                getProject().getName() );
+        dockerUtil = new DockerUtil( getBasedir().getParent(), getLocalRepository().getBasedir(),
+                getBasedir().getName() );
     }
 
     @Nonnull

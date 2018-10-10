@@ -38,7 +38,7 @@ public class DockerUtil
 
     private final String scriptName;
 
-    private final String dockerImage = "openjdk:10";
+    private final String dockerImage = "openjdk:11";
 
     private final String windowsPathRepository; // "C:/Users/reinhart/.m2/Repository";
     private final String dockerPathRepository = "/repository";
@@ -156,7 +156,7 @@ public class DockerUtil
 
     public void addChangeToBaseDirToCommandLineScript()
     {
-        addStringToDockerCommandlineScript( " bin/bash -c \"cd " + dockerPathTrunk + "; " );
+        addStringToDockerCommandlineScript( " bin/bash -c \"cd " + dockerPathTrunk + "/" + projectName + "; " );
     }
 
     public String getDockerCommandlineScriptPath()
