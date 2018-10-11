@@ -380,6 +380,13 @@ public class IntegrationTestMojo
     @Parameter( property = "enableDocker", defaultValue = "false" )
     private boolean enableDocker ;
 
+    /**
+     * Parameter to set which docker image is used, if docker is enabled.
+     * @since 3.0.0-SNAPSHOT
+     */
+    @Parameter( property = "dockerImage", defaultValue = "openjdk:11" )
+    private String dockerImage ;
+
     @Override
     protected int getRerunFailingTestsCount()
     {
@@ -838,5 +845,11 @@ public class IntegrationTestMojo
     public boolean getEnableDocker()
     {
         return enableDocker;
+    }
+
+    @Override
+    public String getDockerImage()
+    {
+        return dockerImage;
     }
 }

@@ -628,8 +628,6 @@ public class ForkStarter
 
         }
 
-        //System.out.println( "Complete commandline :" + cli );
-
         final ThreadedStreamConsumer threadedStreamConsumer = new ThreadedStreamConsumer( forkClient );
         final CloseableCloser closer = new CloseableCloser( forkNumber, threadedStreamConsumer,
                                                             requireNonNull( testProvidingInputStream, "null param" ) );

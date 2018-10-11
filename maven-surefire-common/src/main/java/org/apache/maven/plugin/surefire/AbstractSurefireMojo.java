@@ -883,7 +883,7 @@ public abstract class AbstractSurefireMojo
         surefireBooterArtifact = getSurefireBooterArtifact();
         toolchain = getToolchain();
         dockerUtil = new DockerUtil( getBasedir().getParent(), getLocalRepository().getBasedir(),
-                getBasedir().getName() );
+                getBasedir().getName() , getDockerImage() );
     }
 
     @Nonnull
@@ -3717,5 +3717,10 @@ public abstract class AbstractSurefireMojo
     public boolean getEnableDocker()
     {
         return false;
+    }
+
+    public String getDockerImage()
+    {
+        return "";
     }
 }

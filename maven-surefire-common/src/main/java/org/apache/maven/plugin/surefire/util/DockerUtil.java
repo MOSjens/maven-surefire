@@ -38,7 +38,7 @@ public class DockerUtil
 
     private final String scriptName;
 
-    private final String dockerImage = "openjdk:11";
+    private final String dockerImage; // "openjdk:11"
 
     private final String windowsPathRepository; // "C:/Users/reinhart/.m2/Repository";
     private final String dockerPathRepository = "/repository";
@@ -49,11 +49,12 @@ public class DockerUtil
     File file;
     FileWriter writer;
 
-    public DockerUtil ( String baseDir, String localRepository, String projectName )
+    public DockerUtil ( String baseDir, String localRepository, String projectName, String dockerImage )
     {
         this.windowsPathTrunk = baseDir;
         this.windowsPathRepository = localRepository;
         this.projectName = projectName;
+        this.dockerImage = dockerImage;
         scriptName = projectName + "DockerCommandLine.bat";
     }
 
