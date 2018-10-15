@@ -126,10 +126,7 @@ public abstract class DefaultForkConfiguration
         {
             // The order must not be changed.
             dockerUtil.addDockerCommandToCommandLineScript();
-            //dockerUtil.addDockerMountToCommandLineScript( "C:/noscan/Cadenza/GISterm_ArcGis_Rest_Client",
-            //"/workspace" );
             dockerUtil.addDockerMountBaseDirToCommandLineScript();
-            //dockerUtil.addDockerMountToCommandLineScript( "C:/Users/reinhart/.m2", "/root/.m2" );
             dockerUtil.addDockerMountRepositoryToCommandLineScript();
             dockerUtil.addDockerMountToCommandLineScript( getTempDirectory().getPath(), "/tempDir" );
             dockerUtil.addDockerImageToCommandLineScript();

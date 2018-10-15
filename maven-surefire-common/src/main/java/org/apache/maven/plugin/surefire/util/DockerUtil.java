@@ -157,7 +157,8 @@ public class DockerUtil
 
     public void addChangeToBaseDirToCommandLineScript()
     {
-        addStringToDockerCommandlineScript( " bin/bash -c \"cd " + dockerPathTrunk + "/" + projectName + "; " );
+        addStringToDockerCommandlineScript( " bin/bash -c \"cd " + dockerPathTrunk
+                + "/" + projectName + "; Xvfb :1 & export DISPLAY=:1; " );
     }
 
     public String getDockerCommandlineScriptPath()
@@ -170,6 +171,7 @@ public class DockerUtil
         try
         {
             writer.close();
+            writer = null;
         }
         catch ( IOException e )
         {
@@ -184,6 +186,8 @@ public class DockerUtil
             closeDocekrCommandlineScript();
         }
         file.delete();
+        file = null;
+
     }
 
     public String getWindowsPathRepository()
