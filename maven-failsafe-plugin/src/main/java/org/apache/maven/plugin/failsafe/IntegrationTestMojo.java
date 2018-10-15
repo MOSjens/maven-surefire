@@ -384,7 +384,7 @@ public class IntegrationTestMojo
      * Parameter to set which docker image is used, if docker is enabled.
      * @since 3.0.0-SNAPSHOT
      */
-    @Parameter( property = "dockerImage", defaultValue = "openjdk:11" )
+    @Parameter( property = "dockerImage", defaultValue = "surefire-docker:1" )
     private String dockerImage ;
 
     @Override
