@@ -21,6 +21,7 @@ package org.apache.maven.plugin.surefire.booterclient;
 
 import org.apache.maven.plugin.surefire.booterclient.lazytestprovider.OutputStreamFlushableCommandline;
 import org.apache.maven.plugin.surefire.log.api.ConsoleLogger;
+import org.apache.maven.plugin.surefire.util.DockerUtil;
 import org.apache.maven.surefire.booter.AbstractPathConfiguration;
 import org.apache.maven.surefire.booter.Classpath;
 import org.apache.maven.surefire.booter.ModularClasspath;
@@ -76,8 +77,10 @@ public class ModularClasspathForkConfiguration
     }
 
     @Override
-    protected void resolveClasspath( @Nonnull OutputStreamFlushableCommandline cli, @Nonnull String startClass,
-                                     @Nonnull StartupConfiguration config )
+    protected void resolveClasspath( @Nonnull OutputStreamFlushableCommandline cli,
+                                     @Nonnull String startClass,
+                                     @Nonnull StartupConfiguration config,
+                                     DockerUtil dockerUtil )
             throws SurefireBooterForkException
     {
         try

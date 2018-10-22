@@ -48,29 +48,28 @@ import java.util.jar.Manifest;
 public final class DockerJarManifestForkConfiguration
     extends AbstractClasspathForkConfiguration
 {
-    private DockerUtil dockerUtil;
     @SuppressWarnings( "checkstyle:parameternumber" )
     public DockerJarManifestForkConfiguration( @Nonnull Classpath bootClasspath, @Nonnull File tempDirectory,
                                          @Nullable String debugLine, @Nonnull File workingDirectory,
                                          @Nonnull Properties modelProperties, @Nullable String argLine,
                                          @Nonnull Map<String, String> environmentVariables, boolean debug,
                                          int forkCount, boolean reuseForks, @Nonnull Platform pluginPlatform,
-                                         @Nonnull ConsoleLogger log, DockerUtil dockerUtil )
+                                         @Nonnull ConsoleLogger log )
     {
         super( bootClasspath, tempDirectory, debugLine, workingDirectory, modelProperties, argLine,
                 environmentVariables, debug, forkCount, reuseForks, pluginPlatform, log );
-        this.dockerUtil = dockerUtil;
     }
 
     @Override
     protected void resolveClasspath( @Nonnull OutputStreamFlushableCommandline cli,
                                      @Nonnull String booterThatHasMainMethod,
-                                     @Nonnull StartupConfiguration config )
+                                     @Nonnull StartupConfiguration config,
+                                     DockerUtil dockerUtil )
             throws SurefireBooterForkException
     {
         try
         {
-            File jar = createJar( toCompleteClasspath( config ), booterThatHasMainMethod );
+            File jar = createJar( toCompleteClasspath( config ), booterThatHasMainMethod, dockerUtil );
             dockerUtil.addStringToDockerCommandlineScript( " -jar /tempDir/" + jar.getName() );
         }
         catch ( IOException e )
@@ -89,7 +88,7 @@ public final class DockerJarManifestForkConfiguration
      * @throws IOException When a file operation fails.
      */
     @Nonnull
-    private File createJar( @Nonnull List<String> classPath, @Nonnull String startClassName )
+    private File createJar( @Nonnull List<String> classPath, @Nonnull String startClassName, DockerUtil dockerUtil )
             throws IOException
     {
         File file = File.createTempFile( "surefirebooter", ".jar", getTempDirectory() );

@@ -559,10 +559,15 @@ public class ForkStarter
         final String tempDir;
         final File surefireProperties;
         final File systPropsFile;
+        // Create Docker Util Here!! pass all information needed to this place
+        DockerUtil forkedDockerUtil = new DockerUtil( dockerUtil.getWindowsPathTrunk(),
+                dockerUtil.getWindowsPathRepository(), dockerUtil.getProjectName(), dockerUtil.getDockerImage(),
+                forkNumber );
         try
         {
             tempDir = forkConfiguration.getTempDirectory().getCanonicalPath();
-            BooterSerializer booterSerializer = new BooterSerializer( forkConfiguration, enableDocker, dockerUtil );
+            BooterSerializer booterSerializer = new BooterSerializer( forkConfiguration, enableDocker,
+                    forkedDockerUtil );
             Long pluginPid = forkConfiguration.getPluginPlatform().getPluginPid();
             surefireProperties = booterSerializer.serialize( providerProperties, providerConfiguration,
                     startupConfiguration, testSet, readTestsFromInStream, pluginPid );
@@ -590,7 +595,8 @@ public class ForkStarter
 
 
         OutputStreamFlushableCommandline cli = forkConfiguration.createCommandLine( startupConfiguration, forkNumber,
-                enableDocker, dockerUtil );
+                enableDocker, forkedDockerUtil );
+
 
         // When docker is enabled change the cli to  the docker syntax.
         if ( enableDocker )
@@ -605,11 +611,11 @@ public class ForkStarter
             }
             commandLine += "\"";
 
-            dockerUtil.addStringToDockerCommandlineScript( commandLine );
+            forkedDockerUtil.addStringToDockerCommandlineScript( commandLine );
 
-            dockerUtil.closeDocekrCommandlineScript();
+            forkedDockerUtil.closeDockerCommandlineScript();
 
-            cli.createArg().setLine( dockerUtil.getDockerCommandlineScriptPath() );
+            cli.createArg().setLine( forkedDockerUtil.getDockerCommandlineScriptPath() );
         }
         else
         {
@@ -656,7 +662,7 @@ public class ForkStarter
 
             if ( enableDocker )
             {
-                dockerUtil.deleteDockerCommandlineScript();
+                forkedDockerUtil.deleteDockerCommandlineScript();
             }
 
             if ( forkClient.hadTimeout() )

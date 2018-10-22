@@ -96,7 +96,8 @@ public abstract class DefaultForkConfiguration
 
     protected abstract void resolveClasspath( @Nonnull OutputStreamFlushableCommandline cli,
                                               @Nonnull String booterThatHasMainMethod,
-                                              @Nonnull StartupConfiguration config )
+                                              @Nonnull StartupConfiguration config,
+                                              DockerUtil dockerUtil )
             throws SurefireBooterForkException;
 
     @Nonnull
@@ -151,10 +152,11 @@ public abstract class DefaultForkConfiguration
             }
 
             dockerUtil.addStringToDockerCommandlineScript( "java " + javaCommand );
+
+            resolveClasspath( cli, findStartClass( config ), config, dockerUtil );
         }
         else
         {
-
             for ( Entry<String, String> entry : getEnvironmentVariables().entrySet() )
             {
                 String value = entry.getValue();
@@ -176,9 +178,8 @@ public abstract class DefaultForkConfiguration
                         .setLine( getDebugLine() );
             }
 
+            resolveClasspath( cli, findStartClass( config ), config, null );
         }
-
-        resolveClasspath( cli, findStartClass( config ), config );
 
         return cli;
     }

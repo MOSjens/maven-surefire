@@ -2137,8 +2137,7 @@ public abstract class AbstractSurefireMojo
                     getEffectiveForkCount(),
                     reuseForks,
                     platform,
-                    getConsoleLogger(),
-                    dockerUtil );
+                    getConsoleLogger() );
         }
         else
         {

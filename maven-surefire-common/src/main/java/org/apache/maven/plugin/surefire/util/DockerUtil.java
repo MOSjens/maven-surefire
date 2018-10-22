@@ -38,7 +38,7 @@ public class DockerUtil
 
     private final String scriptName;
 
-    private final String dockerImage; // "openjdk:11"
+    private final String dockerImage;
 
     private final String windowsPathRepository; // "C:/Users/reinhart/.m2/Repository";
     private final String dockerPathRepository = "/repository";
@@ -46,16 +46,29 @@ public class DockerUtil
     private final String dockerPathTrunk = "/workspace";
     private final String projectName;
 
-    File file;
-    FileWriter writer;
+    private int forkNumber = 0;
 
-    public DockerUtil ( String baseDir, String localRepository, String projectName, String dockerImage )
+    private File file;
+    private FileWriter writer;
+
+    public DockerUtil ( String windowsPathTrunk, String windowsPathRepository, String projectName, String dockerImage )
     {
-        this.windowsPathTrunk = baseDir;
-        this.windowsPathRepository = localRepository;
+        this.windowsPathTrunk = windowsPathTrunk;
+        this.windowsPathRepository = windowsPathRepository;
         this.projectName = projectName;
         this.dockerImage = dockerImage;
-        scriptName = projectName + "DockerCommandLine.bat";
+        scriptName = projectName + forkNumber + "DockerCommandLine.bat";
+    }
+
+    public DockerUtil ( String windowsPathTrunk, String windowsPathRepository, String projectName, String dockerImage,
+                        int forkNumber )
+    {
+        this.windowsPathTrunk = windowsPathTrunk;
+        this.windowsPathRepository = windowsPathRepository;
+        this.projectName = projectName;
+        this.dockerImage = dockerImage;
+        scriptName = projectName + forkNumber + "DockerCommandLine.bat";
+        this.forkNumber = forkNumber;
     }
 
     public String rewritePath( String originalPath )
@@ -166,7 +179,7 @@ public class DockerUtil
         return file.getAbsolutePath();
     }
 
-    public void closeDocekrCommandlineScript()
+    public void closeDockerCommandlineScript()
     {
         try
         {
@@ -183,7 +196,7 @@ public class DockerUtil
     {
         if ( writer != null )
         {
-            closeDocekrCommandlineScript();
+            closeDockerCommandlineScript();
         }
         file.delete();
         file = null;
@@ -195,8 +208,18 @@ public class DockerUtil
         return windowsPathRepository;
     }
 
-    public String getWindiowsPathTrunk()
+    public String getWindowsPathTrunk()
     {
         return windowsPathTrunk;
+    }
+
+    public String getProjectName()
+    {
+        return projectName;
+    }
+
+    public String getDockerImage()
+    {
+        return dockerImage;
     }
 }
