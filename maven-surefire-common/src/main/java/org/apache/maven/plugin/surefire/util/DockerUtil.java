@@ -57,7 +57,18 @@ public class DockerUtil
         this.windowsPathRepository = windowsPathRepository;
         this.projectName = projectName;
         this.dockerImage = dockerImage;
-        scriptName = projectName + forkNumber + "DockerCommandLine.bat";
+
+        String os = System.getProperty( "os.name" ).toLowerCase();
+        if ( os.contains( "win" ) )
+        {
+            // OS in Windows.
+            scriptName = projectName + forkNumber + "DockerCommandLine.bat";
+        }
+        else
+        {
+            scriptName = projectName + forkNumber + "DockerCommandLine.sh";
+        }
+
     }
 
     public DockerUtil ( String windowsPathTrunk, String windowsPathRepository, String projectName, String dockerImage,
@@ -67,8 +78,18 @@ public class DockerUtil
         this.windowsPathRepository = windowsPathRepository;
         this.projectName = projectName;
         this.dockerImage = dockerImage;
-        scriptName = projectName + forkNumber + "DockerCommandLine.bat";
         this.forkNumber = forkNumber;
+
+        String os = System.getProperty( "os.name" ).toLowerCase();
+        if ( os.contains( "win" ) )
+        {
+            // OS in Windows.
+            scriptName = projectName + forkNumber + "DockerCommandLine.bat";
+        }
+        else
+        {
+            scriptName = projectName + forkNumber + "DockerCommandLine.sh";
+        }
     }
 
     public String rewritePath( String originalPath )
