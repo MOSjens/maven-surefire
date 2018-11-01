@@ -98,8 +98,7 @@ public final class JarManifestForkConfiguration
             file.deleteOnExit();
         }
         FileOutputStream fos = new FileOutputStream( file );
-        JarOutputStream jos = new JarOutputStream( fos );
-        try
+        try ( JarOutputStream jos = new JarOutputStream( fos ) )
         {
             jos.setLevel( JarOutputStream.STORED );
             JarEntry je = new JarEntry( "META-INF/MANIFEST.MF" );
@@ -136,10 +135,6 @@ public final class JarManifestForkConfiguration
             jos.flush();
 
             return file;
-        }
-        finally
-        {
-            jos.close();
         }
     }
 }
