@@ -19,6 +19,7 @@ package org.apache.maven.plugin.surefire.booterclient;
  * under the License.
  */
 
+import org.apache.maven.plugin.surefire.booterclient.output.InPluginProcessDumpSingleton;
 import org.apache.maven.plugin.surefire.log.api.ConsoleLogger;
 import org.apache.maven.surefire.booter.Classpath;
 
@@ -35,23 +36,26 @@ import java.util.Properties;
 abstract class AbstractClasspathForkConfiguration
         extends DefaultForkConfiguration
 {
+    private final File reportsDir;
 
     @SuppressWarnings( "checkstyle:parameternumber" )
     AbstractClasspathForkConfiguration( @Nonnull Classpath bootClasspath,
-                                               @Nonnull File tempDirectory,
-                                               @Nullable String debugLine,
-                                               @Nonnull File workingDirectory,
-                                               @Nonnull Properties modelProperties,
-                                               @Nullable String argLine,
-                                               @Nonnull Map<String, String> environmentVariables,
-                                               boolean debug,
-                                               int forkCount,
-                                               boolean reuseForks,
-                                               @Nonnull Platform pluginPlatform,
-                                               @Nonnull ConsoleLogger log )
+                                        @Nonnull File tempDirectory,
+                                        @Nullable String debugLine,
+                                        @Nonnull File workingDirectory,
+                                        @Nonnull Properties modelProperties,
+                                        @Nullable String argLine,
+                                        @Nonnull Map<String, String> environmentVariables,
+                                        boolean debug,
+                                        int forkCount,
+                                        boolean reuseForks,
+                                        @Nonnull Platform pluginPlatform,
+                                        @Nonnull ConsoleLogger log,
+                                        @Nonnull File reportsDir )
     {
         super( bootClasspath, tempDirectory, debugLine, workingDirectory, modelProperties, argLine,
                 environmentVariables, debug, forkCount, reuseForks, pluginPlatform, log );
+        this.reportsDir = reportsDir;
     }
 
     @Override
@@ -59,5 +63,11 @@ abstract class AbstractClasspathForkConfiguration
     protected String extendJvmArgLine( @Nonnull String jvmArgLine )
     {
         return jvmArgLine;
+    }
+
+    protected void logDump( Exception e, String msg )
+    {
+        InPluginProcessDumpSingleton.getSingleton()
+                .dumpException( e, msg, reportsDir );
     }
 }

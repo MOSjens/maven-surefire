@@ -31,6 +31,9 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -54,10 +57,10 @@ public final class JarManifestForkConfiguration
                                          @Nonnull Properties modelProperties, @Nullable String argLine,
                                          @Nonnull Map<String, String> environmentVariables, boolean debug,
                                          int forkCount, boolean reuseForks, @Nonnull Platform pluginPlatform,
-                                         @Nonnull ConsoleLogger log )
+                                         @Nonnull ConsoleLogger log, @Nonnull File reportsDir )
     {
         super( bootClasspath, tempDirectory, debugLine, workingDirectory, modelProperties, argLine,
-                environmentVariables, debug, forkCount, reuseForks, pluginPlatform, log );
+                environmentVariables, debug, forkCount, reuseForks, pluginPlatform, log, reportsDir );
     }
 
     @Override
@@ -97,6 +100,7 @@ public final class JarManifestForkConfiguration
         {
             file.deleteOnExit();
         }
+        Path parent = file.getParentFile().toPath();
         FileOutputStream fos = new FileOutputStream( file );
         try ( JarOutputStream jos = new JarOutputStream( fos ) )
         {
@@ -112,7 +116,7 @@ public final class JarManifestForkConfiguration
             for ( Iterator<String> it = classPath.iterator(); it.hasNext(); )
             {
                 File file1 = new File( it.next() );
-                String uri = file1.toURI().toASCIIString();
+                String uri = toClasspathElementUri( parent, file1 );
                 cp.append( uri );
                 if ( file1.isDirectory() && !uri.endsWith( "/" ) )
                 {
@@ -135,6 +139,29 @@ public final class JarManifestForkConfiguration
             jos.flush();
 
             return file;
+        }
+    }
+
+    private String toClasspathElementUri( Path parent, File classPathElement ) throws IOException
+    {
+        try
+        {
+            return new URI( null, parent.relativize( classPathElement.toPath() ).toString(), null )
+                    .toASCIIString();
+        }
+        catch ( IllegalArgumentException e )
+        {
+            logDump( e, "Boot Manifest-JAR contains absolute paths in classpath " + classPathElement.getPath() );
+            return classPathElement.toURI()
+                    .toASCIIString();
+        }
+        catch ( URISyntaxException e )
+        {
+            // This is really unexpected, so fail
+            throw new IOException( "Could not create a relative path "
+                    + classPathElement
+                    + " against "
+                    + parent, e );
         }
     }
 }
