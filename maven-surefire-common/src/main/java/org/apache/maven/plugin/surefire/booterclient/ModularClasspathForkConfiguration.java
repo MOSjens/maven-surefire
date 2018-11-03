@@ -20,6 +20,7 @@ package org.apache.maven.plugin.surefire.booterclient;
  */
 
 import org.apache.maven.plugin.surefire.booterclient.lazytestprovider.OutputStreamFlushableCommandline;
+import org.apache.maven.plugin.surefire.booterclient.output.InPluginProcessDumpSingleton;
 import org.apache.maven.plugin.surefire.log.api.ConsoleLogger;
 import org.apache.maven.plugin.surefire.util.DockerUtil;
 import org.apache.maven.surefire.booter.AbstractPathConfiguration;
@@ -80,6 +81,7 @@ public class ModularClasspathForkConfiguration
     protected void resolveClasspath( @Nonnull OutputStreamFlushableCommandline cli,
                                      @Nonnull String startClass,
                                      @Nonnull StartupConfiguration config,
+									 @Nonnull File dumpLogDirectory
                                      DockerUtil dockerUtil )
             throws SurefireBooterForkException
     {
@@ -104,7 +106,10 @@ public class ModularClasspathForkConfiguration
         }
         catch ( IOException e )
         {
-            throw new SurefireBooterForkException( "Error creating args file", e );
+            String error = "Error creating args file";
+            InPluginProcessDumpSingleton.getSingleton()
+                    .dumpException( e, error, dumpLogDirectory );
+            throw new SurefireBooterForkException( error, e );
         }
     }
 

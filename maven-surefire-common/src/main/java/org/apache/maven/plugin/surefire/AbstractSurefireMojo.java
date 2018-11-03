@@ -2134,8 +2134,7 @@ public abstract class AbstractSurefireMojo
                     getEffectiveForkCount(),
                     reuseForks,
                     platform,
-                    getConsoleLogger(),
-                    getReportsDirectory() );
+                    getConsoleLogger() );
         }
         else if ( getClassLoaderConfiguration().isManifestOnlyJarRequestedAndUsable() && getEnableDocker() )
         {
@@ -2165,8 +2164,7 @@ public abstract class AbstractSurefireMojo
                     getEffectiveForkCount(),
                     reuseForks,
                     platform,
-                    getConsoleLogger(),
-                    getReportsDirectory() );
+                    getConsoleLogger() );
         }
     }
 

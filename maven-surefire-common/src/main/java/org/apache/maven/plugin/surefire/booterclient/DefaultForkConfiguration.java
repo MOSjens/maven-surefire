@@ -97,7 +97,8 @@ public abstract class DefaultForkConfiguration
     protected abstract void resolveClasspath( @Nonnull OutputStreamFlushableCommandline cli,
                                               @Nonnull String booterThatHasMainMethod,
                                               @Nonnull StartupConfiguration config,
-                                              DockerUtil dockerUtil )
+                                              @Nonnull File dumpLogDirectory,
+											  DockerUtil dockerUtil )
             throws SurefireBooterForkException;
 
     @Nonnull
@@ -109,12 +110,14 @@ public abstract class DefaultForkConfiguration
     /**
      * @param config       The startup configuration
      * @param forkNumber   index of forked JVM, to be the replacement in the argLine
+     * @param dumpLogDirectory     directory for dump log file
      * @return CommandLine able to flush entire command going to be sent to forked JVM
      * @throws org.apache.maven.surefire.booter.SurefireBooterForkException when unable to perform the fork
      */
     @Nonnull
     @Override
     public OutputStreamFlushableCommandline createCommandLine( @Nonnull StartupConfiguration config, int forkNumber,
+															   @Nonnull File dumpLogDirectory, 
                                                                boolean enableDocker, DockerUtil dockerUtil )
             throws SurefireBooterForkException
     {
@@ -173,7 +176,7 @@ public abstract class DefaultForkConfiguration
             cli.createArg().setLine( "-Duser.timezone=Europe/Berlin" );
         }
 
-        resolveClasspath( cli, findStartClass( config ), config, dockerUtil );
+        resolveClasspath( cli, findStartClass( config ), config, dumpLogDirectory, dockerUtil );
 
         return cli;
     }
