@@ -125,7 +125,7 @@ public class ModularClasspathForkConfiguration
             surefireArgs.deleteOnExit();
         }
 
-        try ( BufferedWriter writer = new BufferedWriter( new FileWriter( surefireArgs ) ) )
+        try ( BufferedWriter writer = new BufferedWriter( new FileWriter( surefireArgs ), 64 * 1024 ) )
         {
             if ( !modulePath.isEmpty() )
             {
