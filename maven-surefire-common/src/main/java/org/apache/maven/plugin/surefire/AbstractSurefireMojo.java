@@ -781,9 +781,9 @@ public abstract class AbstractSurefireMojo
 
     protected abstract String getReportSchemaLocation();
 
-    protected abstract boolean useJigsawModules();
+    protected abstract boolean useModulePath();
 
-    protected abstract void setUseJigsawModules( boolean useJigsawModules );
+    protected abstract void setUseModulePath( boolean useModulePath );
 
     /**
      * This plugin MOJO artifact.
@@ -1214,9 +1214,9 @@ public abstract class AbstractSurefireMojo
         return new File( getClassesDirectory(), "module-info.class" );
     }
 
-    private boolean canExecuteProviderWithJigsaw( Platform platform )
+    private boolean canExecuteProviderWithModularPath( Platform platform )
     {
-        return useJigsawModules()
+        return useModulePath()
                 && platform.getJdkExecAttributesForTests().isJava9AtLeast()
                 && existsModuleDescriptor();
     }
@@ -1681,7 +1681,7 @@ public abstract class AbstractSurefireMojo
         {
             Set<Artifact> providerArtifacts = provider.getProviderClasspath();
             String providerName = provider.getProviderName();
-            if ( canExecuteProviderWithJigsaw( platform ) && !isInprocess )
+            if ( canExecuteProviderWithModularPath( platform ) && !isInprocess )
             {
                 return newStartupConfigWithModularPath( classLoaderConfiguration, providerArtifacts, providerName,
                         getModuleDescriptor(), scanResult );
@@ -2121,7 +2121,7 @@ public abstract class AbstractSurefireMojo
 
         Classpath bootClasspath = getArtifactClasspath( shadeFire != null ? shadeFire : surefireBooterArtifact );
 
-        if ( canExecuteProviderWithJigsaw( platform ) )
+        if ( canExecuteProviderWithModularPath( platform ) )
         {
             return new ModularClasspathForkConfiguration( bootClasspath,
                     tmpDir,
@@ -2405,7 +2405,7 @@ public abstract class AbstractSurefireMojo
         checksum.add( getForkedProcessExitTimeoutInSeconds() );
         checksum.add( getRerunFailingTestsCount() );
         checksum.add( getTempDir() );
-        checksum.add( useJigsawModules() );
+        checksum.add( useModulePath() );
         addPluginSpecificChecksumItems( checksum );
         return checksum.getSha1();
     }
