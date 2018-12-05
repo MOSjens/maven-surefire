@@ -2351,13 +2351,15 @@ public abstract class AbstractSurefireMojo
             File canonical = result.getCanonicalFile();
             if ( !result.equals( canonical ) )
             {
-                logger.debug( "Canonicalized tempDir path '" + result + "' to '" + canonical + "'" );
+                getConsoleLogger()
+                        .debug( "Canonicalized tempDir path '" + result + "' to '" + canonical + "'" );
             }
             return canonical;
         }
         catch ( IOException e )
         {
-            logger.error( "Could not canonicalize tempDir path '" + result + "'", e );
+            getConsoleLogger()
+                    .error( "Could not canonicalize tempDir path '" + result + "'", e );
         }
         return result;
     }
@@ -2493,7 +2495,7 @@ public abstract class AbstractSurefireMojo
         }
 
         return new TestClassPath( classpathArtifacts, getClassesDirectory(),
-                getTestClassesDirectory(), getAdditionalClasspathElements(), logger );
+                getTestClassesDirectory(), getAdditionalClasspathElements(), getConsoleLogger() );
     }
 
     /**
