@@ -52,7 +52,6 @@
                     <forkMode>once</forkMode>
                     <includes>
                         <include>**/TestA.java,**/TestB.java</include>
-                    </includes>
                 </configuration>
                 <dependencies>
                 </dependencies>
