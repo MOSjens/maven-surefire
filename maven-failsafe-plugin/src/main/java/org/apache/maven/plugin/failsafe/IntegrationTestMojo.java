@@ -321,6 +321,8 @@ public class IntegrationTestMojo
      * **{@literal /}NotIncludedByDefault.java
      * %regex[.*IT.*|.*Not.*]
      * </code></pre>
+     *
+     * @since 2.13
      */
     @Parameter( property = "failsafe.includesFile" )
     private File includesFile;
@@ -334,6 +336,8 @@ public class IntegrationTestMojo
      * **{@literal /}DontRunIT.*
      * %regex[.*IT.*|.*Not.*]
      * </code></pre>
+     *
+     * @since 2.13
      */
     @Parameter( property = "failsafe.excludesFile" )
     private File excludesFile;
