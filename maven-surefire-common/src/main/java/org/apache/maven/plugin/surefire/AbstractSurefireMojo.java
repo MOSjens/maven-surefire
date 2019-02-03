@@ -157,7 +157,7 @@ public abstract class AbstractSurefireMojo
      *
      * @since 2.12
      */
-    @Parameter( defaultValue = "${plugin}", readonly = true )
+    @Parameter( defaultValue = "${plugin}", readonly = true, required = true )
     private PluginDescriptor pluginDescriptor;
 
     /**
@@ -199,7 +199,7 @@ public abstract class AbstractSurefireMojo
      * The base directory of the project being tested. This can be obtained in your integration test via
      * System.getProperty("basedir").
      */
-    @Parameter( defaultValue = "${basedir}" )
+    @Parameter( defaultValue = "${basedir}", readonly = true, required = true )
     protected File basedir;
 
     /**
@@ -653,7 +653,7 @@ public abstract class AbstractSurefireMojo
      *
      * @since 2.2
      */
-    @Parameter( defaultValue = "${project.pluginArtifactRepositories}" )
+    @Parameter( defaultValue = "${project.pluginArtifactRepositories}", readonly = true, required = true )
     private List<ArtifactRepository> remoteRepositories;
 
     /**
@@ -700,7 +700,7 @@ public abstract class AbstractSurefireMojo
      * Read-only parameter with value of Maven property <i>project.build.directory</i>.
      * @since 2.20
      */
-    @Parameter( defaultValue = "${project.build.directory}", readonly = true )
+    @Parameter( defaultValue = "${project.build.directory}", readonly = true, required = true )
     private File projectBuildDirectory;
 
     /**
