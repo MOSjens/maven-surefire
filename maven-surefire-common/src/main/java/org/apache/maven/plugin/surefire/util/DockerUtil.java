@@ -21,24 +21,29 @@ package org.apache.maven.plugin.surefire.util;
 
 import org.apache.maven.surefire.booter.Classpath;
 
+//import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileWriter;
+//import java.io.FileReader;
 import java.io.IOException;
+import java.io.FileWriter;
 import java.util.Iterator;
 
 /**
- * Changes the command line to execute the integration tests on a docker container. Instead of building the
- * command line with a cli object the command line for docker is saved in a script and the script is passed
- * to the cmd. The order of the commands is important and must not be changed.
+ * Changes the command line to execute the integration tests on a docker container. On a Windows OS the command for
+ * docker is saved in a script and the script is passed to the cmd. On any other OS we build the docker command with
+ * a cli object and start the command line directly.
+ * The order of the commands is important and must not be changed.
  *
  * @author Jens Reinhart
  */
 public class DockerUtil
 {
 
-    private final String scriptName;
+    private final String scriptNameWindows;
 
     private final String dockerImage;
+
+    // TODO change name from Windows to Host
 
     private final String windowsPathRepository; // "C:/Users/reinhart/.m2/Repository";
     private final String dockerPathRepository = "/repository";
@@ -47,6 +52,11 @@ public class DockerUtil
     private final String projectName;
 
     private int forkNumber = 0;
+
+    // Can be removed.
+    private boolean isWindows = false;
+
+    private String completeCommand = "";
 
     private File file;
     private FileWriter writer;
@@ -59,15 +69,9 @@ public class DockerUtil
         this.dockerImage = dockerImage;
 
         String os = System.getProperty( "os.name" ).toLowerCase();
-        if ( os.contains( "win" ) )
-        {
-            // OS in Windows.
-            scriptName = projectName + forkNumber + "DockerCommandLine.bat";
-        }
-        else
-        {
-            scriptName = projectName + forkNumber + "DockerCommandLine.sh";
-        }
+        isWindows = os.contains( "win" );
+
+        scriptNameWindows = projectName + forkNumber + "DockerCommandLine.bat";
 
     }
 
@@ -81,22 +85,18 @@ public class DockerUtil
         this.forkNumber = forkNumber;
 
         String os = System.getProperty( "os.name" ).toLowerCase();
-        if ( os.contains( "win" ) )
-        {
-            // OS in Windows.
-            scriptName = projectName + forkNumber + "DockerCommandLine.bat";
-        }
-        else
-        {
-            scriptName = projectName + forkNumber + "DockerCommandLine.sh";
-        }
+        isWindows = os.contains( "win" );
+
+        scriptNameWindows = projectName + forkNumber + "DockerCommandLine.bat";
     }
 
+    // Rewrite paths so they match to the filesystem inside the docker container.
     public String rewritePath( String originalPath )
     {
         if ( originalPath != null )
         {
             // Change each backslash to a forwardslash.
+            // TODO remove the replace
             originalPath = originalPath.replace( "\\", "/" );
             String repositoryPath = windowsPathRepository.replace( "\\", "/" );
             String trunkPath = windowsPathTrunk.replace( "\\", "/" );
@@ -117,11 +117,13 @@ public class DockerUtil
 
     }
 
+    // Rewrite paths so they match to the filesystem inside the docker container.
     public String rewriteJarPath( String originalPath )
     {
         return rewritePath( originalPath.replaceFirst( "/", "" ) );
     }
 
+    // Rewrite paths so they match to the filesystem inside the docker container.
     public Classpath rewriteClasspath( Classpath cp )
     {
         Classpath newCp = Classpath.emptyClasspath();
@@ -140,18 +142,20 @@ public class DockerUtil
         return newCp;
     }
 
+    // On windows we use a batch file to start the docker command.
     public void addStringToDockerCommandlineScript( String command )
     {
         try
         {
             if ( file == null || writer == null )
             {
-                file = new File( scriptName );
+                file = new File( scriptNameWindows );
                 file.setWritable( true );
                 file.setReadable( true );
                 writer = new FileWriter( file );
             }
             writer.write( command );
+            completeCommand += command;
         }
         catch ( IOException e )
         {
@@ -222,6 +226,11 @@ public class DockerUtil
         file.delete();
         file = null;
 
+    }
+
+    public String getScriptContent()
+    {
+        return completeCommand;
     }
 
     public String getWindowsPathRepository()

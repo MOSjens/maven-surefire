@@ -114,7 +114,8 @@ public final class DockerJarManifestForkConfiguration
                 File file1 = new File( it.next() );
                 String uri = file1.toURI().toASCIIString();
 
-                uri = dockerUtil.rewriteJarPath( uri );
+                //uri = dockerUtil.rewriteJarPath( uri );
+                uri = dockerUtil.rewritePath( uri );
 
                 cp.append( uri );
                 if ( file1.isDirectory() && !uri.endsWith( "/" ) )

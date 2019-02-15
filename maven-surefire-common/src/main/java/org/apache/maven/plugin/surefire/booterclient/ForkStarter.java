@@ -615,7 +615,16 @@ public class ForkStarter
 
             forkedDockerUtil.closeDockerCommandlineScript();
 
-            cli.createArg().setLine( forkedDockerUtil.getDockerCommandlineScriptPath() );
+            String os = System.getProperty( "os.name" ).toLowerCase();
+            if ( os.contains( "win" ) )
+            {
+                // OS is Windows.
+                cli.createArg().setLine( forkedDockerUtil.getDockerCommandlineScriptPath() );
+            }
+            else
+            {
+                cli.createArg().setLine( forkedDockerUtil.getScriptContent() );
+            }
         }
         else
         {
@@ -640,6 +649,8 @@ public class ForkStarter
 
 
         log.debug( "Forking command line: " + cli );
+
+        System.out.println( "Forking command line: " + cli );
 
         Integer result = null;
         RunResult runResult = null;

@@ -35,6 +35,7 @@ public class OutputStreamFlushableCommandline
     extends Commandline
     implements FlushReceiverProvider
 {
+
     /**
      * Wraps an output stream in order to delegate a flush.
      */
@@ -77,5 +78,6 @@ public class OutputStreamFlushableCommandline
     {
         return flushReceiver;
     }
+
 
 }

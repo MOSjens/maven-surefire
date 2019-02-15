@@ -122,7 +122,7 @@ public abstract class DefaultForkConfiguration
 
         cli.setWorkingDirectory( getWorkingDirectory( forkNumber ).getAbsolutePath() );
 
-        // When docker is enabled change the cli to  the docker syntax.
+        // When docker is enabled change the cli to the docker syntax.
         if ( enableDocker )
         {
             // The order must not be changed.
@@ -151,7 +151,7 @@ public abstract class DefaultForkConfiguration
                 javaCommand += getDebugLine();
             }
 
-            dockerUtil.addStringToDockerCommandlineScript( "java " + javaCommand );
+            dockerUtil.addStringToDockerCommandlineScript( "java " + javaCommand + " -Duser.timezone=Europe/Berlin" );
 
             resolveClasspath( cli, findStartClass( config ), config, dockerUtil );
         }
