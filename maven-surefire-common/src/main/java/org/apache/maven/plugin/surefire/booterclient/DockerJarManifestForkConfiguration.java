@@ -70,7 +70,7 @@ public final class DockerJarManifestForkConfiguration
         try
         {
             File jar = createJar( toCompleteClasspath( config ), booterThatHasMainMethod, dockerUtil );
-            dockerUtil.addStringToDockerCommandlineScript( " -jar /tempDir/" + jar.getName() );
+            dockerUtil.addStringToDockerCommand( " -jar /tempDir/" + jar.getName() );
         }
         catch ( IOException e )
         {
@@ -114,7 +114,6 @@ public final class DockerJarManifestForkConfiguration
                 File file1 = new File( it.next() );
                 String uri = file1.toURI().toASCIIString();
 
-                //uri = dockerUtil.rewriteJarPath( uri );
                 uri = dockerUtil.rewritePath( uri );
 
                 cp.append( uri );

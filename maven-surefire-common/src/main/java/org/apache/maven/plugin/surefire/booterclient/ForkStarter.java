@@ -55,8 +55,6 @@ import javax.annotation.Nonnull;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
-//import java.nio.file.Files;
-//import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
@@ -84,8 +82,6 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.maven.plugin.surefire.AbstractSurefireMojo.createCopyAndReplaceForkNumPlaceholder;
 import static org.apache.maven.plugin.surefire.SurefireHelper.DUMP_FILE_PREFIX;
-//import static org.apache.maven.plugin.surefire.SurefireHelper.commandLineOptions;
-//import static org.apache.maven.plugin.surefire.SurefireHelper.logDebugOrCliShowErrors;
 import static org.apache.maven.plugin.surefire.booterclient.ForkNumberBucket.drawNumber;
 import static org.apache.maven.plugin.surefire.booterclient.ForkNumberBucket.returnNumber;
 import static org.apache.maven.plugin.surefire.booterclient.lazytestprovider.TestLessInputStream
@@ -559,10 +555,11 @@ public class ForkStarter
         final String tempDir;
         final File surefireProperties;
         final File systPropsFile;
-        // Create Docker Util Here!! pass all information needed to this place
-        DockerUtil forkedDockerUtil = new DockerUtil( dockerUtil.getWindowsPathTrunk(),
-                dockerUtil.getWindowsPathRepository(), dockerUtil.getProjectName(), dockerUtil.getDockerImage(),
-                forkNumber );
+
+        // We need a new dockerUtil for every fork, otherwise they would interfere with each other.
+        DockerUtil forkedDockerUtil = new DockerUtil( this.dockerUtil.getHostPathTrunk(),
+                this.dockerUtil.getHostPathRepository(), this.dockerUtil.getProjectName(),
+                this.dockerUtil.getDockerImage() );
         try
         {
             tempDir = forkConfiguration.getTempDirectory().getCanonicalPath();
@@ -611,20 +608,10 @@ public class ForkStarter
             }
             commandLine += "\"";
 
-            forkedDockerUtil.addStringToDockerCommandlineScript( commandLine );
+            forkedDockerUtil.addStringToDockerCommand( commandLine );
 
-            forkedDockerUtil.closeDockerCommandlineScript();
+            cli.createArg().setLine( forkedDockerUtil.getDockerCommand() );
 
-            String os = System.getProperty( "os.name" ).toLowerCase();
-            if ( os.contains( "win" ) )
-            {
-                // OS is Windows.
-                cli.createArg().setLine( forkedDockerUtil.getDockerCommandlineScriptPath() );
-            }
-            else
-            {
-                cli.createArg().setLine( forkedDockerUtil.getScriptContent() );
-            }
         }
         else
         {
@@ -670,11 +657,6 @@ public class ForkStarter
             result = future.call();
 
             System.out.println( "result of commandline: " + result );
-
-            if ( enableDocker )
-            {
-                forkedDockerUtil.deleteDockerCommandlineScript();
-            }
 
             if ( forkClient.hadTimeout() )
             {

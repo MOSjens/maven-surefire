@@ -331,7 +331,7 @@ public final class ForkedBooter
         encodeAndWriteToOutput( ( (char) BOOTERCODE_BYE ) + ",0,BYE!\n" );
         launchLastDitchDaemonShutdownThread( 0 );
         long timeoutMillis = max( systemExitTimeoutInSeconds * ONE_SECOND_IN_MILLIS, ONE_SECOND_IN_MILLIS );
-        acquireOnePermit( barrier, 1L ); // timeoutMillis );
+        acquireOnePermit( barrier, timeoutMillis );
         cancelPingScheduler();
         commandReader.stop();
         System.exit( 0 );

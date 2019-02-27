@@ -126,12 +126,12 @@ public abstract class DefaultForkConfiguration
         if ( enableDocker )
         {
             // The order must not be changed.
-            dockerUtil.addDockerCommandToCommandLineScript();
-            dockerUtil.addDockerMountBaseDirToCommandLineScript();
-            dockerUtil.addDockerMountRepositoryToCommandLineScript();
-            dockerUtil.addDockerMountToCommandLineScript( getTempDirectory().getPath(), "/tempDir" );
-            dockerUtil.addDockerImageToCommandLineScript();
-            dockerUtil.addChangeToBaseDirToCommandLineScript();
+            dockerUtil.addDockerCommandToCommandLine();
+            dockerUtil.addDockerMountBaseDirToCommandLine();
+            dockerUtil.addDockerMountRepositoryToCommandLine();
+            dockerUtil.addDockerMountToCommandLine( getTempDirectory().getPath(), "/tempDir" );
+            dockerUtil.addDockerImageToCommandLine();
+            dockerUtil.addChangeToBaseDirToCommandLine();
 
             String javaCommand = "";
             for ( Entry<String, String> entry : getEnvironmentVariables().entrySet() )
@@ -151,7 +151,7 @@ public abstract class DefaultForkConfiguration
                 javaCommand += getDebugLine();
             }
 
-            dockerUtil.addStringToDockerCommandlineScript( "java " + javaCommand + " -Duser.timezone=Europe/Berlin" );
+            dockerUtil.addStringToDockerCommand( "java " + javaCommand + " -Duser.timezone=Europe/Berlin" );
 
             resolveClasspath( cli, findStartClass( config ), config, dockerUtil );
         }

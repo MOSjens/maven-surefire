@@ -66,7 +66,7 @@ public class ForkConfigurationTest
         ClassLoaderConfiguration clc = new ClassLoaderConfiguration( true, true );
         StartupConfiguration startup = new StartupConfiguration( "", cpConfig, clc, false, false );
 
-        Commandline cli = config.createCommandLine( startup, 1 );
+        Commandline cli = config.createCommandLine( startup, 1 , false,null );
 
         String line = StringUtils.join( cli.getCommandline(), " " );
         assertTrue( line.contains( "-jar" ) );
@@ -86,7 +86,7 @@ public class ForkConfigurationTest
         ClassLoaderConfiguration clc = new ClassLoaderConfiguration( true, true );
         StartupConfiguration startup = new StartupConfiguration( "", cpConfig, clc, false, false );
 
-        Commandline commandLine = config.createCommandLine( startup, 1 );
+        Commandline commandLine = config.createCommandLine( startup, 1 , false, null );
 
         assertTrue( commandLine.toString().contains( "abc def" ) );
     }
@@ -109,7 +109,7 @@ public class ForkConfigurationTest
         StartupConfiguration startup = new StartupConfiguration( "", cpConfig, clc, false, false );
         ForkConfiguration config = getForkConfiguration( cwd.getCanonicalFile() );
 
-        Commandline commandLine = config.createCommandLine( startup, 1 );
+        Commandline commandLine = config.createCommandLine( startup, 1 , false , null );
 
         File forkDirectory = new File( baseDir, "fork_1" );
         forkDirectory.deleteOnExit();
@@ -136,7 +136,7 @@ public class ForkConfigurationTest
 
         try
         {
-            config.createCommandLine( STARTUP_CONFIG, 1 );
+            config.createCommandLine( STARTUP_CONFIG, 1, false, null );
         }
         catch ( SurefireBooterForkException sbfe )
         {
@@ -166,7 +166,7 @@ public class ForkConfigurationTest
 
         try
         {
-            config.createCommandLine( STARTUP_CONFIG, 1 );
+            config.createCommandLine( STARTUP_CONFIG, 1, false, null );
         }
         catch ( SurefireBooterForkException sbfe )
         {

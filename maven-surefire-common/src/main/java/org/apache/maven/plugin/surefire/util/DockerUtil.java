@@ -21,11 +21,7 @@ package org.apache.maven.plugin.surefire.util;
 
 import org.apache.maven.surefire.booter.Classpath;
 
-//import java.io.BufferedReader;
 import java.io.File;
-//import java.io.FileReader;
-import java.io.IOException;
-import java.io.FileWriter;
 import java.util.Iterator;
 
 /**
@@ -39,55 +35,24 @@ import java.util.Iterator;
 public class DockerUtil
 {
 
-    private final String scriptNameWindows;
-
     private final String dockerImage;
 
-    // TODO change name from Windows to Host
-
-    private final String windowsPathRepository; // "C:/Users/reinhart/.m2/Repository";
+    private final String hostPathRepository;
     private final String dockerPathRepository = "/repository";
-    private final String windowsPathTrunk; // "C:\\noscan\\Cadenza\\GISterm_ArcGis_Rest_Client";
+    private final String hostPathTrunk;
     private final String dockerPathTrunk = "/workspace";
     private final String projectName;
 
-    private int forkNumber = 0;
 
-    // Can be removed.
-    private boolean isWindows = false;
+    private String dockerCommand = "";
 
-    private String completeCommand = "";
 
-    private File file;
-    private FileWriter writer;
-
-    public DockerUtil ( String windowsPathTrunk, String windowsPathRepository, String projectName, String dockerImage )
+    public DockerUtil ( String hostPathTrunk, String hostPathRepository, String projectName, String dockerImage )
     {
-        this.windowsPathTrunk = windowsPathTrunk;
-        this.windowsPathRepository = windowsPathRepository;
+        this.hostPathTrunk = hostPathTrunk;
+        this.hostPathRepository = hostPathRepository;
         this.projectName = projectName;
         this.dockerImage = dockerImage;
-
-        String os = System.getProperty( "os.name" ).toLowerCase();
-        isWindows = os.contains( "win" );
-
-        scriptNameWindows = projectName + forkNumber + "DockerCommandLine.bat";
-
-    }
-
-    public DockerUtil ( String windowsPathTrunk, String windowsPathRepository, String projectName, String dockerImage,
-                        int forkNumber )
-    {
-        this.windowsPathTrunk = windowsPathTrunk;
-        this.windowsPathRepository = windowsPathRepository;
-        this.projectName = projectName;
-        this.dockerImage = dockerImage;
-        this.forkNumber = forkNumber;
-
-        String os = System.getProperty( "os.name" ).toLowerCase();
-        isWindows = os.contains( "win" );
-
-        scriptNameWindows = projectName + forkNumber + "DockerCommandLine.bat";
     }
 
     // Rewrite paths so they match to the filesystem inside the docker container.
@@ -95,32 +60,19 @@ public class DockerUtil
     {
         if ( originalPath != null )
         {
-            // Change each backslash to a forwardslash.
-            // TODO remove the replace
-            originalPath = originalPath.replace( "\\", "/" );
-            String repositoryPath = windowsPathRepository.replace( "\\", "/" );
-            String trunkPath = windowsPathTrunk.replace( "\\", "/" );
-
             // Change uris to the docker path.
-            if ( originalPath.contains( repositoryPath ) )
+            if ( originalPath.contains( hostPathRepository ) )
             {
-                originalPath = originalPath.replace( repositoryPath, dockerPathRepository );
+                originalPath = originalPath.replace( hostPathRepository, dockerPathRepository );
             }
-            else if ( originalPath.contains( trunkPath ) )
+            else if ( originalPath.contains( hostPathTrunk ) )
             {
-                originalPath = originalPath.replace( trunkPath, dockerPathTrunk );
+                originalPath = originalPath.replace( hostPathTrunk, dockerPathTrunk );
             }
 
         }
 
         return originalPath;
-
-    }
-
-    // Rewrite paths so they match to the filesystem inside the docker container.
-    public String rewriteJarPath( String originalPath )
-    {
-        return rewritePath( originalPath.replaceFirst( "/", "" ) );
     }
 
     // Rewrite paths so they match to the filesystem inside the docker container.
@@ -142,105 +94,62 @@ public class DockerUtil
         return newCp;
     }
 
-    // On windows we use a batch file to start the docker command.
-    public void addStringToDockerCommandlineScript( String command )
+    // Collect the whole command for the command Line here.
+    public void addStringToDockerCommand( String command )
     {
-        try
-        {
-            if ( file == null || writer == null )
-            {
-                file = new File( scriptNameWindows );
-                file.setWritable( true );
-                file.setReadable( true );
-                writer = new FileWriter( file );
-            }
-            writer.write( command );
-            completeCommand += command;
-        }
-        catch ( IOException e )
-        {
-            e.printStackTrace();
-        }
+        dockerCommand += command;
     }
 
-    public void addDockerCommandToCommandLineScript()
+    public void addDockerCommandToCommandLine()
     {
-        addStringToDockerCommandlineScript( "docker run --rm " );
+        addStringToDockerCommand( "docker run --rm " );
     }
 
-    public void addDockerMountRepositoryToCommandLineScript()
+    public void addDockerMountRepositoryToCommandLine()
     {
-        addDockerMountToCommandLineScript( windowsPathRepository, dockerPathRepository );
+        addDockerMountToCommandLine( hostPathRepository, dockerPathRepository );
     }
 
-    public void addDockerMountBaseDirToCommandLineScript()
+    public void addDockerMountBaseDirToCommandLine()
     {
-        addDockerMountToCommandLineScript( windowsPathTrunk, dockerPathTrunk );
+        addDockerMountToCommandLine( hostPathTrunk, dockerPathTrunk );
     }
 
-    public void addDockerMountToCommandLineScript( String source, String target )
+    public void addDockerMountToCommandLine( String source, String target )
     {
         String command = "--mount type=bind,source=\""
                 + source
                 + "\",target=\""
                 + target
                 + "\" ";
-        addStringToDockerCommandlineScript( command );
+        addStringToDockerCommand( command );
     }
 
-    public void addDockerImageToCommandLineScript()
+    public void addDockerImageToCommandLine()
     {
-        addStringToDockerCommandlineScript( dockerImage + " " );
+        addStringToDockerCommand( dockerImage + " " );
     }
 
-    public void addChangeToBaseDirToCommandLineScript()
+    public void addChangeToBaseDirToCommandLine()
     {
-        addStringToDockerCommandlineScript( " bin/bash -c \"cd " + dockerPathTrunk
+        addStringToDockerCommand( " bin/bash -c \"cd " + dockerPathTrunk
                 + "/" + projectName + "; Xvfb :1 & export DISPLAY=:1; " );
     }
 
-    public String getDockerCommandlineScriptPath()
+
+    public String getDockerCommand()
     {
-        return file.getAbsolutePath();
+        return dockerCommand;
     }
 
-    public void closeDockerCommandlineScript()
+    public String getHostPathRepository()
     {
-        try
-        {
-            writer.close();
-            writer = null;
-        }
-        catch ( IOException e )
-        {
-            e.printStackTrace();
-        }
+        return hostPathRepository;
     }
 
-    public void deleteDockerCommandlineScript()
+    public String getHostPathTrunk()
     {
-        if ( writer != null )
-        {
-            closeDockerCommandlineScript();
-        }
-        file.delete();
-        file = null;
-
-    }
-
-    public String getScriptContent()
-    {
-        return completeCommand;
-    }
-
-    public String getWindowsPathRepository()
-    {
-        return windowsPathRepository;
-    }
-
-    public String getWindowsPathTrunk()
-    {
-        return windowsPathTrunk;
+        return hostPathTrunk;
     }
 
     public String getProjectName()
