@@ -39,7 +39,6 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
-//import static org.apache.maven.plugin.surefire.SurefireHelper.escapeToPlatformPath;
 
 /**
  * @author <a href="mailto:tibordigana@apache.org">Tibor Digana (tibor17)</a>
@@ -70,7 +69,7 @@ public final class DockerJarManifestForkConfiguration
         try
         {
             File jar = createJar( toCompleteClasspath( config ), booterThatHasMainMethod, dockerUtil );
-            dockerUtil.addStringToDockerCommand( " -jar /tempDir/" + jar.getName() );
+            cli.createArg().setLine( "-jar /tempDir/" + jar.getName() );
         }
         catch ( IOException e )
         {

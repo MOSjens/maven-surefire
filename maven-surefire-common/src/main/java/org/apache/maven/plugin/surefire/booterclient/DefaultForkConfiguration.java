@@ -120,66 +120,60 @@ public abstract class DefaultForkConfiguration
     {
         OutputStreamFlushableCommandline cli = new OutputStreamFlushableCommandline();
 
+        cli.getShell().setQuotedArgumentsEnabled( false );
+
         cli.setWorkingDirectory( getWorkingDirectory( forkNumber ).getAbsolutePath() );
 
         // When docker is enabled change the cli to the docker syntax.
         if ( enableDocker )
         {
             // The order must not be changed.
-            dockerUtil.addDockerCommandToCommandLine();
-            dockerUtil.addDockerMountBaseDirToCommandLine();
-            dockerUtil.addDockerMountRepositoryToCommandLine();
-            dockerUtil.addDockerMountToCommandLine( getTempDirectory().getPath(), "/tempDir" );
-            dockerUtil.addDockerImageToCommandLine();
-            dockerUtil.addChangeToBaseDirToCommandLine();
+            cli.createArg().setLine( dockerUtil.getDockerCommand() );
+            cli.createArg().setLine( dockerUtil.getDockerMountBaseDir() );
+            cli.createArg().setLine( dockerUtil.getDockerMountRepository() );
+            cli.createArg().setLine( dockerUtil.getDockerMount( getTempDirectory().getPath(), "/tempDir" ) );
+            cli.createArg().setLine( dockerUtil.getDockerImage() );
+            cli.createArg().setLine( dockerUtil.getShellInDocker() );
+            cli.createArg().setValue( "\'" ); // For correct execution of multiple commands.
+            cli.createArg().setLine( dockerUtil.getGoToBaseDirCommand() );
 
-            String javaCommand = "";
-            for ( Entry<String, String> entry : getEnvironmentVariables().entrySet() )
-            {
-                String value = entry.getValue();
-                javaCommand += ( value == null ? "" : value );
-            }
+        }
 
-            String jvmArgLine = newJvmArgLine( forkNumber );
-            if ( !jvmArgLine.isEmpty() )
-            {
-                javaCommand += jvmArgLine;
-            }
+        for ( Entry<String, String> entry : getEnvironmentVariables().entrySet() )
+        {
+            String value = entry.getValue();
+            cli.addEnvironment( entry.getKey(), value == null ? "" : value );
+        }
 
-            if ( getDebugLine() != null && !getDebugLine().isEmpty() )
-            {
-                javaCommand += getDebugLine();
-            }
-
-            dockerUtil.addStringToDockerCommand( "java " + javaCommand + " -Duser.timezone=Europe/Berlin" );
-
-            resolveClasspath( cli, findStartClass( config ), config, dockerUtil );
+        if ( enableDocker )
+        {
+            cli.createArg().setLine( "java" );
         }
         else
         {
-            for ( Entry<String, String> entry : getEnvironmentVariables().entrySet() )
-            {
-                String value = entry.getValue();
-                cli.addEnvironment( entry.getKey(), value == null ? "" : value );
-            }
-
             cli.setExecutable( getJdkForTests().getJvmExecutable() );
-
-            String jvmArgLine = newJvmArgLine( forkNumber );
-            if ( !jvmArgLine.isEmpty() )
-            {
-                cli.createArg()
-                        .setLine( jvmArgLine );
-            }
-
-            if ( getDebugLine() != null && !getDebugLine().isEmpty() )
-            {
-                cli.createArg()
-                        .setLine( getDebugLine() );
-            }
-
-            resolveClasspath( cli, findStartClass( config ), config, null );
         }
+
+        String jvmArgLine = newJvmArgLine( forkNumber );
+        if ( !jvmArgLine.isEmpty() )
+        {
+            cli.createArg()
+                    .setLine( jvmArgLine );
+        }
+
+        if ( getDebugLine() != null && !getDebugLine().isEmpty() )
+        {
+            cli.createArg()
+                    .setLine( getDebugLine() );
+        }
+
+        if ( enableDocker )
+        {
+            // Some tests with databases need the correct timezone.
+            cli.createArg().setLine( "-Duser.timezone=Europe/Berlin" );
+        }
+
+        resolveClasspath( cli, findStartClass( config ), config, dockerUtil );
 
         return cli;
     }

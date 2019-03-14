@@ -100,44 +100,43 @@ public class DockerUtil
         dockerCommand += command;
     }
 
-    public void addDockerCommandToCommandLine()
+    public String getDockerCommand()
     {
-        addStringToDockerCommand( "docker run --rm " );
+        return "docker run --rm ";
     }
 
-    public void addDockerMountRepositoryToCommandLine()
+    public String getDockerMountRepository()
     {
-        addDockerMountToCommandLine( hostPathRepository, dockerPathRepository );
+        return getDockerMount( hostPathRepository, dockerPathRepository );
     }
 
-    public void addDockerMountBaseDirToCommandLine()
+    public String getDockerMountBaseDir()
     {
-        addDockerMountToCommandLine( hostPathTrunk, dockerPathTrunk );
+        return getDockerMount( hostPathTrunk, dockerPathTrunk );
     }
 
-    public void addDockerMountToCommandLine( String source, String target )
+    public String getDockerMount( String source, String target )
     {
         String command = "--mount type=bind,source=\""
                 + source
                 + "\",target=\""
                 + target
                 + "\" ";
-        addStringToDockerCommand( command );
+        return command;
     }
 
-    public void addDockerImageToCommandLine()
+    public String getGoToBaseDirCommand()
     {
-        addStringToDockerCommand( dockerImage + " " );
+        return "cd " + dockerPathTrunk + "/" + projectName + "; Xvfb :1 & export DISPLAY=:1;";
     }
 
-    public void addChangeToBaseDirToCommandLine()
+    public String getShellInDocker()
     {
-        addStringToDockerCommand( " bin/bash -c \"cd " + dockerPathTrunk
-                + "/" + projectName + "; Xvfb :1 & export DISPLAY=:1; " );
+        return "bin/bash -c";
     }
 
 
-    public String getDockerCommand()
+    public String getDockerString()
     {
         return dockerCommand;
     }
@@ -157,6 +156,7 @@ public class DockerUtil
         return projectName;
     }
 
+    // also needed for the command
     public String getDockerImage()
     {
         return dockerImage;

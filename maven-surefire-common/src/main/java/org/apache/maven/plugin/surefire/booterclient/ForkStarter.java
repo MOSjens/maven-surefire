@@ -598,6 +598,23 @@ public class ForkStarter
         // When docker is enabled change the cli to  the docker syntax.
         if ( enableDocker )
         {
+            if ( testProvidingInputStream != null )
+            {
+                testProvidingInputStream.setFlushReceiverProvider( cli );
+            }
+
+            cli.createArg().setValue( "/tempDir/" );
+            cli.createArg().setValue( DUMP_FILE_PREFIX + forkNumber );
+            cli.createArg().setValue( surefireProperties.getName() );
+            if ( systPropsFile != null )
+            {
+                cli.createArg().setValue( systPropsFile.getName() );
+            }
+
+            // For correct ending of the commandline.
+            cli.createArg().setValue( "\'" );
+
+            /*
             String commandLine = "";
 
             commandLine += " /tempDir/ " + DUMP_FILE_PREFIX + forkNumber + " "
@@ -610,8 +627,8 @@ public class ForkStarter
 
             forkedDockerUtil.addStringToDockerCommand( commandLine );
 
-            cli.createArg().setLine( forkedDockerUtil.getDockerCommand() );
-
+            cli.createArg().setLine( forkedDockerUtil.getDockerString() );
+            */
         }
         else
         {
