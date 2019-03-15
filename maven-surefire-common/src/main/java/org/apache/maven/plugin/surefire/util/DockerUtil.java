@@ -25,26 +25,23 @@ import java.io.File;
 import java.util.Iterator;
 
 /**
- * Changes the command line to execute the integration tests on a docker container. On a Windows OS the command for
- * docker is saved in a script and the script is passed to the cmd. On any other OS we build the docker command with
- * a cli object and start the command line directly.
- * The order of the commands is important and must not be changed.
+ * Utils to change the command line to execute the integration tests inside a docker container.
+ * This class provides methods to rewrite paths which point to the host system to the correct paths inside the
+ * container. The order of the commands is important and must not be changed.
  *
  * @author Jens Reinhart
  */
 public class DockerUtil
 {
-
+    private final String hostPathTrunk;
+    private final String hostPathRepository;
+    private final String projectName;
     private final String dockerImage;
 
-    private final String hostPathRepository;
+    // The path to the maven repository inside the docker container.
     private final String dockerPathRepository = "/repository";
-    private final String hostPathTrunk;
+    // The path to the cadenza trunk inside the docker container.
     private final String dockerPathTrunk = "/workspace";
-    private final String projectName;
-
-
-    private String dockerCommand = "";
 
 
     public DockerUtil ( String hostPathTrunk, String hostPathRepository, String projectName, String dockerImage )
@@ -75,7 +72,7 @@ public class DockerUtil
         return originalPath;
     }
 
-    // Rewrite paths so they match to the filesystem inside the docker container.
+    // Rewrite classpaths so they match to the filesystem inside the docker container.
     public Classpath rewriteClasspath( Classpath cp )
     {
         Classpath newCp = Classpath.emptyClasspath();
@@ -92,12 +89,6 @@ public class DockerUtil
         }
 
         return newCp;
-    }
-
-    // Collect the whole command for the command Line here.
-    public void addStringToDockerCommand( String command )
-    {
-        dockerCommand += command;
     }
 
     public String getDockerCommand()
@@ -117,12 +108,11 @@ public class DockerUtil
 
     public String getDockerMount( String source, String target )
     {
-        String command = "--mount type=bind,source=\""
+        return "--mount type=bind,source=\""
                 + source
                 + "\",target=\""
                 + target
                 + "\" ";
-        return command;
     }
 
     public String getGoToBaseDirCommand()
@@ -135,28 +125,6 @@ public class DockerUtil
         return "bin/bash -c";
     }
 
-
-    public String getDockerString()
-    {
-        return dockerCommand;
-    }
-
-    public String getHostPathRepository()
-    {
-        return hostPathRepository;
-    }
-
-    public String getHostPathTrunk()
-    {
-        return hostPathTrunk;
-    }
-
-    public String getProjectName()
-    {
-        return projectName;
-    }
-
-    // also needed for the command
     public String getDockerImage()
     {
         return dockerImage;

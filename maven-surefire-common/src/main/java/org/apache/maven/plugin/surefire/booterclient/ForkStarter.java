@@ -556,15 +556,19 @@ public class ForkStarter
         final File surefireProperties;
         final File systPropsFile;
 
-        // We need a new dockerUtil for every fork, otherwise they would interfere with each other.
-        DockerUtil forkedDockerUtil = new DockerUtil( this.dockerUtil.getHostPathTrunk(),
-                this.dockerUtil.getHostPathRepository(), this.dockerUtil.getProjectName(),
-                this.dockerUtil.getDockerImage() );
         try
         {
-            tempDir = forkConfiguration.getTempDirectory().getCanonicalPath();
+            // For docker we have to set the TempDir inside the container.
+            if ( enableDocker )
+            {
+                tempDir = "/tempDir/";
+            }
+            else
+            {
+                tempDir = forkConfiguration.getTempDirectory().getCanonicalPath();
+            }
             BooterSerializer booterSerializer = new BooterSerializer( forkConfiguration, enableDocker,
-                    forkedDockerUtil );
+                    dockerUtil );
             Long pluginPid = forkConfiguration.getPluginPlatform().getPluginPid();
             surefireProperties = booterSerializer.serialize( providerProperties, providerConfiguration,
                     startupConfiguration, testSet, readTestsFromInStream, pluginPid );
@@ -592,65 +596,31 @@ public class ForkStarter
 
 
         OutputStreamFlushableCommandline cli = forkConfiguration.createCommandLine( startupConfiguration, forkNumber,
-                enableDocker, forkedDockerUtil );
+                enableDocker, dockerUtil );
 
 
-        // When docker is enabled change the cli to  the docker syntax.
+        if ( testProvidingInputStream != null )
+        {
+            testProvidingInputStream.setFlushReceiverProvider( cli );
+        }
+
+        cli.createArg().setValue( tempDir );
+        cli.createArg().setValue( DUMP_FILE_PREFIX + forkNumber );
+        cli.createArg().setValue( surefireProperties.getName() );
+        if ( systPropsFile != null )
+        {
+            cli.createArg().setValue( systPropsFile.getName() );
+        }
+
+        // For correct ending of the commandline when docker is used.
         if ( enableDocker )
         {
-            if ( testProvidingInputStream != null )
-            {
-                testProvidingInputStream.setFlushReceiverProvider( cli );
-            }
-
-            cli.createArg().setValue( "/tempDir/" );
-            cli.createArg().setValue( DUMP_FILE_PREFIX + forkNumber );
-            cli.createArg().setValue( surefireProperties.getName() );
-            if ( systPropsFile != null )
-            {
-                cli.createArg().setValue( systPropsFile.getName() );
-            }
-
-            // For correct ending of the commandline.
             cli.createArg().setValue( "\'" );
-
-            /*
-            String commandLine = "";
-
-            commandLine += " /tempDir/ " + DUMP_FILE_PREFIX + forkNumber + " "
-                    + surefireProperties.getName();
-            if ( systPropsFile != null )
-            {
-                commandLine += " " + systPropsFile.getName();
-            }
-            commandLine += "\"";
-
-            forkedDockerUtil.addStringToDockerCommand( commandLine );
-
-            cli.createArg().setLine( forkedDockerUtil.getDockerString() );
-            */
-        }
-        else
-        {
-            if ( testProvidingInputStream != null )
-            {
-                testProvidingInputStream.setFlushReceiverProvider( cli );
-            }
-
-            cli.createArg().setValue( tempDir );
-            cli.createArg().setValue( DUMP_FILE_PREFIX + forkNumber );
-            cli.createArg().setValue( surefireProperties.getName() );
-            if ( systPropsFile != null )
-            {
-                cli.createArg().setValue( systPropsFile.getName() );
-            }
-
         }
 
         final ThreadedStreamConsumer threadedStreamConsumer = new ThreadedStreamConsumer( forkClient );
         final CloseableCloser closer = new CloseableCloser( forkNumber, threadedStreamConsumer,
                                                             requireNonNull( testProvidingInputStream, "null param" ) );
-
 
         log.debug( "Forking command line: " + cli );
 
