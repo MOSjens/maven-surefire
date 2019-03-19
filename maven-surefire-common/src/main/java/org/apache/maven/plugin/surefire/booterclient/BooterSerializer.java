@@ -100,6 +100,8 @@ class BooterSerializer
 
     /**
      * Does not modify sourceProperties
+     * Changes for execution in docker: replace absolute paths to the Project which is tested or the maven repository
+     * to the equivalent paths inside docker.
      */
     File serialize( KeyValueSource sourceProperties, ProviderConfiguration booterConfiguration,
                    StartupConfiguration providerConfiguration, Object testSet, boolean readTestsFromInStream,

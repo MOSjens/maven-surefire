@@ -624,6 +624,7 @@ public class ForkStarter
 
         log.debug( "Forking command line: " + cli );
 
+        // For debugging reasons only.
         System.out.println( "Forking command line: " + cli );
 
         Integer result = null;
@@ -640,9 +641,9 @@ public class ForkStarter
 
             currentForkClients.add( forkClient );
 
-            // Here the cli is called and the program waits for the tests to be done
             result = future.call();
 
+            // For debugging reasons only.
             System.out.println( "result of commandline: " + result );
 
             if ( forkClient.hadTimeout() )
