@@ -71,7 +71,7 @@ public final class JarManifestForkConfiguration
     protected void resolveClasspath( @Nonnull OutputStreamFlushableCommandline cli,
                                      @Nonnull String booterThatHasMainMethod,
                                      @Nonnull StartupConfiguration config,
-									 @Nonnull File dumpLogDirectory,
+                                     @Nonnull File dumpLogDirectory,
                                      DockerUtil dockerUtil )
             throws SurefireBooterForkException
     {

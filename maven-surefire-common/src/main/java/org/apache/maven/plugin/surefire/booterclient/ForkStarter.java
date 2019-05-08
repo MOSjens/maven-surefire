@@ -558,14 +558,11 @@ public class ForkStarter
         try
         {
             // For docker we have to set the TempDir inside the container.
-            if ( enableDocker )
-            {
-                tempDir = "/tempDir/";
-            }
-            else
-            {
-                tempDir = forkConfiguration.getTempDirectory().getCanonicalPath();
-            }
+            tempDir = enableDocker ? dockerUtil.rewritePath( forkConfiguration.getTempDirectory().getCanonicalPath() )
+                    : forkConfiguration.getTempDirectory().getCanonicalPath();
+
+            //tempDir = forkConfiguration.getTempDirectory().getCanonicalPath();
+
             BooterSerializer booterSerializer = new BooterSerializer( forkConfiguration, enableDocker,
                     dockerUtil );
             Long pluginPid = forkConfiguration.getPluginPlatform().getPluginPid();
@@ -593,7 +590,7 @@ public class ForkStarter
             throw new SurefireBooterForkException( "Error creating properties files for forking", e );
         }
 
-		File dumpLogDir = replaceForkThreadsInPath( startupReportConfiguration.getReportsDirectory(), forkNumber );
+        File dumpLogDir = replaceForkThreadsInPath( startupReportConfiguration.getReportsDirectory(), forkNumber );
         OutputStreamFlushableCommandline cli = forkConfiguration.createCommandLine( startupConfiguration, forkNumber,
                 dumpLogDir, enableDocker, dockerUtil );
 
@@ -623,7 +620,7 @@ public class ForkStarter
         log.debug( "Forking command line: " + cli );
 
         // For debugging reasons only.
-        System.out.println( "Forking command line: " + cli );
+        System.out.println( "Forking Command line: " + cli );
 
         Integer result = null;
         RunResult runResult = null;
@@ -642,7 +639,7 @@ public class ForkStarter
             result = future.call();
 
             // For debugging reasons only.
-            System.out.println( "result of commandline: " + result );
+            System.out.println( "Result of commandline: " + result );
 
             if ( forkClient.hadTimeout() )
             {

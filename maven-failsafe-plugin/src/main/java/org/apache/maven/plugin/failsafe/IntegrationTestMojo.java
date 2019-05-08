@@ -389,7 +389,7 @@ public class IntegrationTestMojo
     @Parameter( property = "dockerImage", defaultValue = "surefire-docker:1" )
     private String dockerImage ;
 
-	/**
+    /**
      * Disables modular path (aka Jigsaw project since of Java 9) even if <i>module-info.java</i> is used in project.
      * <br>
      * Enabled by default.

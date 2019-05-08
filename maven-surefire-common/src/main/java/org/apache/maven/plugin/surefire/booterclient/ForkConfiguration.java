@@ -64,7 +64,7 @@ public abstract class ForkConfiguration
     @Nonnull
     public abstract OutputStreamFlushableCommandline createCommandLine( @Nonnull StartupConfiguration config,
                                                                         int forkNumber,
-																		@Nonnull File dumpLogDirectory,
+                                                                        @Nonnull File dumpLogDirectory,
                                                                         boolean enableDocker,
                                                                         DockerUtil dockerUtil )
             throws SurefireBooterForkException;

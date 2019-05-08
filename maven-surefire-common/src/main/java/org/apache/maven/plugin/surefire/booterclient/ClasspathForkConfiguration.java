@@ -58,7 +58,7 @@ public final class ClasspathForkConfiguration
                                      @Nonnull String booterThatHasMainMethod,
                                      @Nonnull StartupConfiguration config,
                                      @Nonnull File dumpLogDirectory,
-									 DockerUtil dockerUtil )
+                                     DockerUtil dockerUtil )
             throws SurefireBooterForkException
     {
         cli.addEnvironment( "CLASSPATH", join( toCompleteClasspath( config ).iterator(), File.pathSeparator ) );

@@ -98,7 +98,7 @@ public abstract class DefaultForkConfiguration
                                               @Nonnull String booterThatHasMainMethod,
                                               @Nonnull StartupConfiguration config,
                                               @Nonnull File dumpLogDirectory,
-											  DockerUtil dockerUtil )
+                                              DockerUtil dockerUtil )
             throws SurefireBooterForkException;
 
     @Nonnull
@@ -117,8 +117,9 @@ public abstract class DefaultForkConfiguration
     @Nonnull
     @Override
     public OutputStreamFlushableCommandline createCommandLine( @Nonnull StartupConfiguration config, int forkNumber,
-															   @Nonnull File dumpLogDirectory, 
-                                                               boolean enableDocker, DockerUtil dockerUtil )
+                                                               @Nonnull File dumpLogDirectory,
+                                                               boolean enableDocker,
+                                                               DockerUtil dockerUtil )
             throws SurefireBooterForkException
     {
         OutputStreamFlushableCommandline cli = new OutputStreamFlushableCommandline();
@@ -134,7 +135,7 @@ public abstract class DefaultForkConfiguration
             cli.createArg().setLine( dockerUtil.getDockerCommand() );
             cli.createArg().setLine( dockerUtil.getDockerMountBaseDir() );
             cli.createArg().setLine( dockerUtil.getDockerMountRepository() );
-            cli.createArg().setLine( dockerUtil.getDockerMount( getTempDirectory().getPath(), "/tempDir" ) );
+            //cli.createArg().setLine( dockerUtil.getDockerMount( getTempDirectory().getPath(), "/tempDir" ) );
             cli.createArg().setLine( dockerUtil.getDockerImage() );
             cli.createArg().setLine( dockerUtil.getShellInDocker() );
             cli.createArg().setValue( "\'" ); // For correct execution of multiple commands.

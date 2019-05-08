@@ -82,7 +82,7 @@ public class ModularClasspathForkConfiguration
     protected void resolveClasspath( @Nonnull OutputStreamFlushableCommandline cli,
                                      @Nonnull String startClass,
                                      @Nonnull StartupConfiguration config,
-									 @Nonnull File dumpLogDirectory
+                                     @Nonnull File dumpLogDirectory,
                                      DockerUtil dockerUtil )
             throws SurefireBooterForkException
     {

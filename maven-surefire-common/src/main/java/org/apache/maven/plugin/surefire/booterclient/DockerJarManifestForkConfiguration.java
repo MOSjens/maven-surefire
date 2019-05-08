@@ -45,6 +45,7 @@ import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
 import static java.nio.file.Files.isDirectory;
+import static org.apache.maven.plugin.surefire.SurefireHelper.escapeToPlatformPath;
 import static org.apache.maven.surefire.util.internal.StringUtils.NL;
 
 
@@ -79,7 +80,9 @@ public final class DockerJarManifestForkConfiguration
         {
             File jar = createJar( toCompleteClasspath( config ), booterThatHasMainMethod, dumpLogDirectory,
                     dockerUtil );
-            cli.createArg().setLine( "-jar /tempDir/" + jar.getName() );
+            cli.createArg().setValue( "-jar" );
+            cli.createArg().setValue( dockerUtil.rewritePath( escapeToPlatformPath( jar.getAbsolutePath() ) ) );
+            //cli.createArg().setLine( "-jar /tempDir/" + jar.getName() );
         }
         catch ( IOException e )
         {

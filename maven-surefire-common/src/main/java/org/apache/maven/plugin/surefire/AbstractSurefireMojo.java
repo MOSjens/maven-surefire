@@ -53,7 +53,6 @@ import org.apache.maven.plugin.surefire.log.api.ConsoleLogger;
 import org.apache.maven.plugin.surefire.util.DependencyScanner;
 import org.apache.maven.plugin.surefire.util.DirectoryScanner;
 import org.apache.maven.plugin.surefire.util.DockerUtil;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.artifact.filter.PatternIncludesArtifactFilter;
@@ -118,6 +117,7 @@ import static java.lang.Thread.currentThread;
 import static java.util.Arrays.asList;
 import static java.util.Collections.addAll;
 import static java.util.Collections.singletonMap;
+import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.substringBeforeLast;
 import static org.apache.commons.lang3.SystemUtils.IS_OS_WINDOWS;
 import static org.apache.maven.artifact.ArtifactUtils.artifactMapByVersionlessId;
@@ -907,9 +907,9 @@ public abstract class AbstractSurefireMojo
         {
             toolchain = getToolchainManager().getToolchainFromBuildContext( "jdk", getSession() );
         }
-		
-		dockerUtil = new DockerUtil( getBasedir().getParent(), getLocalRepository().getBasedir(),
-                getBasedir().getName() , getDockerImage() );
+
+        dockerUtil = new DockerUtil( getBasedir().getParent(), getLocalRepository().getBasedir(),
+                getBasedir().getName(), getDockerImage() );
     }
 
     @Nonnull
@@ -928,7 +928,13 @@ public abstract class AbstractSurefireMojo
         return scanner.scan();
     }
 
-    private DefaultScanResult scanDependencies()
+    @SuppressWarnings( "unchecked" )
+    List<Artifact> getProjectTestArtifacts()
+    {
+        return project.getTestArtifacts();
+    }
+
+    DefaultScanResult scanDependencies() throws MojoFailureException
     {
         if ( getDependenciesToScan() == null )
         {
@@ -938,16 +944,40 @@ public abstract class AbstractSurefireMojo
         {
             try
             {
-                // @TODO noinspection unchecked, check MavenProject 3.x for Generics in surefire:3.0
-                @SuppressWarnings( "unchecked" )
-                List<File> dependenciesToScan =
-                    DependencyScanner.filter( project.getTestArtifacts(), asList( getDependenciesToScan() ) );
-                DependencyScanner scanner = new DependencyScanner( dependenciesToScan, getIncludedAndExcludedTests() );
-                return scanner.scan();
+                DefaultScanResult result = null;
+
+                List<Artifact> dependenciesToScan =
+                        filter( getProjectTestArtifacts(), asList( getDependenciesToScan() ) );
+
+                for ( Artifact artifact : dependenciesToScan )
+                {
+                    String type = artifact.getType();
+                    File out = artifact.getFile();
+                    if ( out == null || !out.exists()
+                            || !( "jar".equals( type ) || out.isDirectory() || out.getName().endsWith( ".jar" ) ) )
+                    {
+                        continue;
+                    }
+
+                    if ( out.isFile() )
+                    {
+                        DependencyScanner scanner =
+                                new DependencyScanner( singletonList( out ), getIncludedAndExcludedTests() );
+                        result = result == null ? scanner.scan() : result.append( scanner.scan() );
+                    }
+                    else if ( out.isDirectory() )
+                    {
+                        DirectoryScanner scanner =
+                                new DirectoryScanner( out, getIncludedAndExcludedTests() );
+                        result = result == null ? scanner.scan() : result.append( scanner.scan() );
+                    }
+                }
+
+                return result;
             }
             catch ( Exception e )
             {
-                throw new RuntimeException( e );
+                throw new MojoFailureException( e.getLocalizedMessage(), e );
             }
         }
     }

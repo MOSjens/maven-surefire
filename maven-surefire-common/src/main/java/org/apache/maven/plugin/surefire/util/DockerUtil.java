@@ -118,6 +118,7 @@ public class DockerUtil
     public String getGoToBaseDirCommand()
     {
         return "cd " + dockerPathTrunk + "/" + projectName + "; Xvfb :1 & export DISPLAY=:1;";
+        //return "Xvfb :1 & export DISPLAY=:1;";
     }
 
     public String getShellInDocker()
