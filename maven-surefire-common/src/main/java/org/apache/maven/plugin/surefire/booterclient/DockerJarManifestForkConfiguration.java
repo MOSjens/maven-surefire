@@ -82,7 +82,6 @@ public final class DockerJarManifestForkConfiguration
                     dockerUtil );
             cli.createArg().setValue( "-jar" );
             cli.createArg().setValue( dockerUtil.rewritePath( escapeToPlatformPath( jar.getAbsolutePath() ) ) );
-            //cli.createArg().setLine( "-jar /tempDir/" + jar.getName() );
         }
         catch ( IOException e )
         {

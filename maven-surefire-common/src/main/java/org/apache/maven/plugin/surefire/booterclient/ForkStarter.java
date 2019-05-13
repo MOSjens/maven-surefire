@@ -561,8 +561,6 @@ public class ForkStarter
             tempDir = enableDocker ? dockerUtil.rewritePath( forkConfiguration.getTempDirectory().getCanonicalPath() )
                     : forkConfiguration.getTempDirectory().getCanonicalPath();
 
-            //tempDir = forkConfiguration.getTempDirectory().getCanonicalPath();
-
             BooterSerializer booterSerializer = new BooterSerializer( forkConfiguration, enableDocker,
                     dockerUtil );
             Long pluginPid = forkConfiguration.getPluginPlatform().getPluginPid();

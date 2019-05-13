@@ -135,7 +135,6 @@ public abstract class DefaultForkConfiguration
             cli.createArg().setLine( dockerUtil.getDockerCommand() );
             cli.createArg().setLine( dockerUtil.getDockerMountBaseDir() );
             cli.createArg().setLine( dockerUtil.getDockerMountRepository() );
-            //cli.createArg().setLine( dockerUtil.getDockerMount( getTempDirectory().getPath(), "/tempDir" ) );
             cli.createArg().setLine( dockerUtil.getDockerImage() );
             cli.createArg().setLine( dockerUtil.getShellInDocker() );
             cli.createArg().setValue( "\'" ); // For correct execution of multiple commands.
