@@ -19,7 +19,6 @@ package org.apache.maven.plugin.failsafe;
  * under the License.
  */
 
-import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.surefire.AbstractSurefireMojo;
@@ -37,7 +36,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 import static org.apache.maven.plugin.failsafe.util.FailsafeSummaryXmlUtils.writeSummary;
 
@@ -64,7 +62,7 @@ public class IntegrationTestMojo
     @Parameter
     private File classesDirectory;
 
-    @Parameter( readonly = true, defaultValue = "${project.build.outputDirectory}" )
+    @Parameter( defaultValue = "${project.build.outputDirectory}", readonly = true, required = true )
     private File defaultClassesDirectory;
 
     /**
@@ -323,6 +321,8 @@ public class IntegrationTestMojo
      * **{@literal /}NotIncludedByDefault.java
      * %regex[.*IT.*|.*Not.*]
      * </code></pre>
+     *
+     * @since 2.13
      */
     @Parameter( property = "failsafe.includesFile" )
     private File includesFile;
@@ -336,6 +336,8 @@ public class IntegrationTestMojo
      * **{@literal /}DontRunIT.*
      * %regex[.*IT.*|.*Not.*]
      * </code></pre>
+     *
+     * @since 2.13
      */
     @Parameter( property = "failsafe.excludesFile" )
     private File excludesFile;
@@ -386,6 +388,17 @@ public class IntegrationTestMojo
      */
     @Parameter( property = "dockerImage", defaultValue = "surefire-docker:1" )
     private String dockerImage ;
+
+    /**
+     * Disables modular path (aka Jigsaw project since of Java 9) even if <i>module-info.java</i> is used in project.
+     * <br>
+     * Enabled by default.
+     * If enabled, <i>module-info.java</i> exists and executes with JDK 9+, modular path is used.
+     *
+     * @since 3.0.0-M2
+     */
+    @Parameter( property = "failsafe.useModulePath", defaultValue = "true" )
+    private boolean useModulePath;
 
     @Override
     protected int getRerunFailingTestsCount()
@@ -457,14 +470,7 @@ public class IntegrationTestMojo
     @Override
     protected String getReportSchemaLocation()
     {
-        return "https://maven.apache.org/surefire/maven-failsafe-plugin/xsd/failsafe-test-report.xsd";
-    }
-
-    @Override
-    protected Artifact getMojoArtifact()
-    {
-        final Map<String, Artifact> pluginArtifactMap = getPluginArtifactMap();
-        return pluginArtifactMap.get( "org.apache.maven.plugins:maven-failsafe-plugin" );
+        return "https://maven.apache.org/surefire/maven-failsafe-plugin/xsd/failsafe-test-report-3.0.xsd";
     }
 
     @Override
@@ -474,6 +480,7 @@ public class IntegrationTestMojo
     }
 
     @Override
+    @Deprecated
     public void setSkipTests( boolean skipTests )
     {
         this.skipTests = skipTests;
@@ -822,6 +829,18 @@ public class IntegrationTestMojo
     public File getExcludesFile()
     {
         return excludesFile;
+    }
+
+    @Override
+    protected boolean useModulePath()
+    {
+        return useModulePath;
+    }
+
+    @Override
+    protected void setUseModulePath( boolean useModulePath )
+    {
+        this.useModulePath = useModulePath;
     }
 
     @Override

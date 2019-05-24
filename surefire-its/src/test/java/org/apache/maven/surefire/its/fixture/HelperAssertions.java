@@ -30,7 +30,7 @@ import java.util.Locale;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
-import static org.apache.commons.io.Charsets.UTF_8;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assume.assumeTrue;
 
 @SuppressWarnings( { "JavaDoc" } )
@@ -126,7 +126,7 @@ public class HelperAssertions
 
     public static List<ReportTestSuite> extractReports( File... testDirs )
     {
-        List<File> reportsDirs = new ArrayList<File>();
+        List<File> reportsDirs = new ArrayList<>();
         for ( File testDir : testDirs )
         {
             File reportsDir = new File( testDir, "target/surefire-reports" );
@@ -147,7 +147,7 @@ public class HelperAssertions
 
     private static List<ReportTestSuite> extractITReports( File... testDirs )
     {
-        List<File> reportsDirs = new ArrayList<File>();
+        List<File> reportsDirs = new ArrayList<>();
         for ( File testDir : testDirs )
         {
             File reportsDir = new File( testDir, "target/failsafe-reports" );
@@ -170,7 +170,7 @@ public class HelperAssertions
     {
         String thisVersion = System.getProperty( "java.specification.version" );
         assumeTrue( "java.specification.version: " + thisVersion,
-                Double.valueOf( thisVersion ) >= expectedVersion );
+                Double.parseDouble( thisVersion ) >= expectedVersion );
     }
 
     public static String convertUnicodeToUTF8( String unicode )

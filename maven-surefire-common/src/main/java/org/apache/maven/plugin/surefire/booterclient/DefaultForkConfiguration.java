@@ -38,9 +38,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
-import static org.apache.maven.plugin.surefire.AbstractSurefireMojo.FORK_NUMBER_PLACEHOLDER;
-import static org.apache.maven.plugin.surefire.AbstractSurefireMojo.THREAD_NUMBER_PLACEHOLDER;
+import static org.apache.maven.plugin.surefire.SurefireHelper.replaceForkThreadsInPath;
 import static org.apache.maven.plugin.surefire.util.Relocator.relocate;
+import static org.apache.maven.plugin.surefire.SurefireHelper.replaceThreadNumberPlaceholders;
 import static org.apache.maven.surefire.booter.Classpath.join;
 
 /**
@@ -97,6 +97,7 @@ public abstract class DefaultForkConfiguration
     protected abstract void resolveClasspath( @Nonnull OutputStreamFlushableCommandline cli,
                                               @Nonnull String booterThatHasMainMethod,
                                               @Nonnull StartupConfiguration config,
+                                              @Nonnull File dumpLogDirectory,
                                               DockerUtil dockerUtil )
             throws SurefireBooterForkException;
 
@@ -109,13 +110,16 @@ public abstract class DefaultForkConfiguration
     /**
      * @param config       The startup configuration
      * @param forkNumber   index of forked JVM, to be the replacement in the argLine
+     * @param dumpLogDirectory     directory for dump log file
      * @return CommandLine able to flush entire command going to be sent to forked JVM
      * @throws org.apache.maven.surefire.booter.SurefireBooterForkException when unable to perform the fork
      */
     @Nonnull
     @Override
     public OutputStreamFlushableCommandline createCommandLine( @Nonnull StartupConfiguration config, int forkNumber,
-                                                               boolean enableDocker, DockerUtil dockerUtil )
+                                                               @Nonnull File dumpLogDirectory,
+                                                               boolean enableDocker,
+                                                               DockerUtil dockerUtil )
             throws SurefireBooterForkException
     {
         OutputStreamFlushableCommandline cli = new OutputStreamFlushableCommandline();
@@ -131,7 +135,6 @@ public abstract class DefaultForkConfiguration
             cli.createArg().setLine( dockerUtil.getDockerCommand() );
             cli.createArg().setLine( dockerUtil.getDockerMountBaseDir() );
             cli.createArg().setLine( dockerUtil.getDockerMountRepository() );
-            cli.createArg().setLine( dockerUtil.getDockerMount( getTempDirectory().getPath(), "/tempDir" ) );
             cli.createArg().setLine( dockerUtil.getDockerImage() );
             cli.createArg().setLine( dockerUtil.getShellInDocker() );
             cli.createArg().setValue( "\'" ); // For correct execution of multiple commands.
@@ -173,9 +176,14 @@ public abstract class DefaultForkConfiguration
             cli.createArg().setLine( "-Duser.timezone=Europe/Berlin" );
         }
 
-        resolveClasspath( cli, findStartClass( config ), config, dockerUtil );
+        resolveClasspath( cli, findStartClass( config ), config, dumpLogDirectory, dockerUtil );
 
         return cli;
+    }
+
+    protected ConsoleLogger getLogger()
+    {
+        return log;
     }
 
     @Nonnull
@@ -192,8 +200,8 @@ public abstract class DefaultForkConfiguration
         Classpath providerClasspath = pathConfig.getProviderClasspath();
         Classpath completeClasspath = join( join( bootClasspath, testClasspath ), providerClasspath );
 
-        log.debug( completeClasspath.getLogMessage( "boot classpath:" ) );
-        log.debug( completeClasspath.getCompactLogMessage( "boot(compact) classpath:" ) );
+        getLogger().debug( completeClasspath.getLogMessage( "boot classpath:" ) );
+        getLogger().debug( completeClasspath.getCompactLogMessage( "boot(compact) classpath:" ) );
 
         return completeClasspath.getClassPath();
     }
@@ -202,7 +210,7 @@ public abstract class DefaultForkConfiguration
     private File getWorkingDirectory( int forkNumber )
             throws SurefireBooterForkException
     {
-        File cwd = new File( replaceThreadNumberPlaceholder( getWorkingDirectory().getAbsolutePath(), forkNumber ) );
+        File cwd = replaceForkThreadsInPath( getWorkingDirectory(), forkNumber );
 
         if ( !cwd.exists() && !cwd.mkdirs() )
         {
@@ -215,14 +223,6 @@ public abstract class DefaultForkConfiguration
                     "WorkingDirectory " + cwd.getAbsolutePath() + " exists and is not a directory" );
         }
         return cwd;
-    }
-
-    @Nonnull
-    private static String replaceThreadNumberPlaceholder( @Nonnull String argLine, int threadNumber )
-    {
-        String threadNumberAsString = String.valueOf( threadNumber );
-        return argLine.replace( THREAD_NUMBER_PLACEHOLDER, threadNumberAsString )
-                .replace( FORK_NUMBER_PLACEHOLDER, threadNumberAsString );
     }
 
     /**
@@ -276,7 +276,7 @@ public abstract class DefaultForkConfiguration
     @Nonnull
     private static <K, V> Map<K, V> toImmutable( @Nullable Map<K, V> map )
     {
-        return map == null ? Collections.<K, V>emptyMap() : new ImmutableMap<K, V>( map );
+        return map == null ? Collections.<K, V>emptyMap() : new ImmutableMap<>( map );
     }
 
     @Override
@@ -364,7 +364,7 @@ public abstract class DefaultForkConfiguration
     private String newJvmArgLine( int forks )
     {
         String interpolatedArgs = stripNewLines( interpolateArgLineWithPropertyExpressions() );
-        String argsWithReplacedForkNumbers = replaceThreadNumberPlaceholder( interpolatedArgs, forks );
+        String argsWithReplacedForkNumbers = replaceThreadNumberPlaceholders( interpolatedArgs, forks );
         return extendJvmArgLine( argsWithReplacedForkNumbers );
     }
 

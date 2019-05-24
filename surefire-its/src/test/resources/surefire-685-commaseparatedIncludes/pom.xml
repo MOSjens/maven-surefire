@@ -29,8 +29,8 @@
     <name>surefire-685-commaseparatedIncludes</name>
 
     <properties>
-        <maven.compiler.source>1.6</maven.compiler.source>
-        <maven.compiler.target>1.6</maven.compiler.target>
+        <maven.compiler.source>1.7</maven.compiler.source>
+        <maven.compiler.target>1.7</maven.compiler.target>
     </properties>
 
     <dependencies>
@@ -52,7 +52,6 @@
                     <forkMode>once</forkMode>
                     <includes>
                         <include>**/TestA.java,**/TestB.java</include>
-                    </includes>
                 </configuration>
                 <dependencies>
                 </dependencies>

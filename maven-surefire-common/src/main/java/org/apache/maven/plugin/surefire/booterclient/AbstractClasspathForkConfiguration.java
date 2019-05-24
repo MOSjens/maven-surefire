@@ -38,17 +38,17 @@ abstract class AbstractClasspathForkConfiguration
 
     @SuppressWarnings( "checkstyle:parameternumber" )
     AbstractClasspathForkConfiguration( @Nonnull Classpath bootClasspath,
-                                               @Nonnull File tempDirectory,
-                                               @Nullable String debugLine,
-                                               @Nonnull File workingDirectory,
-                                               @Nonnull Properties modelProperties,
-                                               @Nullable String argLine,
-                                               @Nonnull Map<String, String> environmentVariables,
-                                               boolean debug,
-                                               int forkCount,
-                                               boolean reuseForks,
-                                               @Nonnull Platform pluginPlatform,
-                                               @Nonnull ConsoleLogger log )
+                                        @Nonnull File tempDirectory,
+                                        @Nullable String debugLine,
+                                        @Nonnull File workingDirectory,
+                                        @Nonnull Properties modelProperties,
+                                        @Nullable String argLine,
+                                        @Nonnull Map<String, String> environmentVariables,
+                                        boolean debug,
+                                        int forkCount,
+                                        boolean reuseForks,
+                                        @Nonnull Platform pluginPlatform,
+                                        @Nonnull ConsoleLogger log )
     {
         super( bootClasspath, tempDirectory, debugLine, workingDirectory, modelProperties, argLine,
                 environmentVariables, debug, forkCount, reuseForks, pluginPlatform, log );

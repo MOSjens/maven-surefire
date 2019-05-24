@@ -45,6 +45,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import static java.io.File.pathSeparator;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.io.FileUtils.readFileToString;
 
 /**
@@ -222,7 +223,7 @@ public class NewClassLoaderRunner
 
         private static Collection<URL> toPathList( String path ) throws MalformedURLException
         {
-            Collection<URL> classPath = new HashSet<URL>();
+            Collection<URL> classPath = new HashSet<>();
             for ( String file : path.split( pathSeparator ) )
             {
                 classPath.add( new File( file ).toURL() );
@@ -232,10 +233,11 @@ public class NewClassLoaderRunner
 
         private static Collection<URL> toPathList()
         {
-            Collection<URL> classPath = new HashSet<URL>();
+            Collection<URL> classPath = new HashSet<>();
             try
             {
-                String[] files = readFileToString( new File( "target/test-classpath/cp.txt" ) ).split( pathSeparator );
+                String[] files = readFileToString( new File( "target/test-classpath/cp.txt" ), UTF_8 )
+                        .split( pathSeparator );
                 for ( String file : files )
                 {
                     File f = new File( file );

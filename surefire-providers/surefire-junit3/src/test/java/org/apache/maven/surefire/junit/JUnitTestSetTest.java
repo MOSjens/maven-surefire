@@ -26,7 +26,6 @@ import org.apache.maven.surefire.common.junit3.JUnit3Reflector;
 import org.apache.maven.surefire.report.ReportEntry;
 import org.apache.maven.surefire.report.RunListener;
 import org.apache.maven.surefire.report.TestSetReportEntry;
-import org.apache.maven.surefire.testset.TestSetFailedException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,17 +35,19 @@ public class JUnitTestSetTest
 {
 
     public void testExecuteSuiteClass()
-        throws TestSetFailedException
+        throws Exception
     {
         ClassLoader testClassLoader = this.getClass().getClassLoader();
         JUnit3Reflector reflector = new JUnit3Reflector( testClassLoader );
         JUnitTestSet testSet = new JUnitTestSet( Suite.class, reflector );
         SuccessListener listener = new SuccessListener();
         testSet.execute( listener, testClassLoader );
-        List succeededTests = listener.getSucceededTests();
+        List<ReportEntry> succeededTests = listener.getSucceededTests();
         assertEquals( 1, succeededTests.size() );
-        assertEquals( "testSuccess(org.apache.maven.surefire.junit.JUnitTestSetTest$AlwaysSucceeds)",
-                      ( (ReportEntry) succeededTests.get( 0 ) ).getName() );
+        assertEquals( "org.apache.maven.surefire.junit.JUnitTestSetTest$AlwaysSucceeds",
+                succeededTests.get( 0 ).getSourceName() );
+        assertEquals( "testSuccess",
+                      succeededTests.get( 0 ).getName() );
     }
 
     public static final class AlwaysSucceeds
@@ -62,7 +63,7 @@ public class JUnitTestSetTest
         implements RunListener
     {
 
-        private List<ReportEntry> succeededTests = new ArrayList<ReportEntry>();
+        private List<ReportEntry> succeededTests = new ArrayList<>();
 
         @Override
         public void testSetStarting( TestSetReportEntry report )
@@ -82,7 +83,7 @@ public class JUnitTestSetTest
         @Override
         public void testSucceeded( ReportEntry report )
         {
-            this.succeededTests.add( report );
+            succeededTests.add( report );
         }
 
         @Override
@@ -119,7 +120,7 @@ public class JUnitTestSetTest
             testSkipped( report );
         }
 
-        public List getSucceededTests()
+        List<ReportEntry> getSucceededTests()
         {
             return succeededTests;
         }

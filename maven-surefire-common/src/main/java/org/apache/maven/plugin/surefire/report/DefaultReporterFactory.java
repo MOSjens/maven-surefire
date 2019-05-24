@@ -63,9 +63,10 @@ import static org.apache.maven.surefire.util.internal.ObjectUtils.useNonNull;
 public class DefaultReporterFactory
     implements ReporterFactory
 {
+    private final Collection<TestSetRunListener> listeners = new ConcurrentLinkedQueue<>();
     private final StartupReportConfiguration reportConfiguration;
     private final ConsoleLogger consoleLogger;
-    private final Collection<TestSetRunListener> listeners;
+    private final Integer forkNumber;
 
     private RunStatistics globalStats = new RunStatistics();
 
@@ -80,9 +81,15 @@ public class DefaultReporterFactory
 
     public DefaultReporterFactory( StartupReportConfiguration reportConfiguration, ConsoleLogger consoleLogger )
     {
+        this( reportConfiguration, consoleLogger, null );
+    }
+
+    public DefaultReporterFactory( StartupReportConfiguration reportConfiguration, ConsoleLogger consoleLogger,
+                                   Integer forkNumber )
+    {
         this.reportConfiguration = reportConfiguration;
         this.consoleLogger = consoleLogger;
-        listeners = new ConcurrentLinkedQueue<TestSetRunListener>();
+        this.forkNumber = forkNumber;
     }
 
     @Override
@@ -113,26 +120,24 @@ public class DefaultReporterFactory
 
     private FileReporter createFileReporter()
     {
-        final FileReporter fileReporter = reportConfiguration.instantiateFileReporter();
+        FileReporter fileReporter = reportConfiguration.instantiateFileReporter( forkNumber );
         return useNonNull( fileReporter, NullFileReporter.INSTANCE );
     }
 
     private StatelessXmlReporter createSimpleXMLReporter()
     {
-        final StatelessXmlReporter xmlReporter = reportConfiguration.instantiateStatelessXmlReporter();
+        StatelessXmlReporter xmlReporter = reportConfiguration.instantiateStatelessXmlReporter( forkNumber );
         return useNonNull( xmlReporter, NullStatelessXmlReporter.INSTANCE );
     }
 
     private TestcycleConsoleOutputReceiver createConsoleOutputReceiver()
     {
-        final TestcycleConsoleOutputReceiver consoleOutputReceiver =
-                reportConfiguration.instantiateConsoleOutputFileReporter();
-        return useNonNull( consoleOutputReceiver, NullConsoleOutputReceiver.INSTANCE );
+        return reportConfiguration.instantiateConsoleOutputFileReporter( forkNumber );
     }
 
     private StatisticsReporter createStatisticsReporter()
     {
-        final StatisticsReporter statisticsReporter = reportConfiguration.getStatisticsReporter();
+        StatisticsReporter statisticsReporter = reportConfiguration.getStatisticsReporter();
         return useNonNull( statisticsReporter, NullStatisticsReporter.INSTANCE );
     }
 
@@ -147,10 +152,7 @@ public class DefaultReporterFactory
     {
         for ( DefaultReporterFactory factory : factories )
         {
-            for ( TestSetRunListener listener : factory.listeners )
-            {
-                listeners.add( listener );
-            }
+            listeners.addAll( factory.listeners );
         }
     }
 
@@ -267,22 +269,21 @@ public class DefaultReporterFactory
     void mergeTestHistoryResult()
     {
         globalStats = new RunStatistics();
-        flakyTests = new TreeMap<String, List<TestMethodStats>>();
-        failedTests = new TreeMap<String, List<TestMethodStats>>();
-        errorTests = new TreeMap<String, List<TestMethodStats>>();
+        flakyTests = new TreeMap<>();
+        failedTests = new TreeMap<>();
+        errorTests = new TreeMap<>();
 
-        Map<String, List<TestMethodStats>> mergedTestHistoryResult = new HashMap<String, List<TestMethodStats>>();
+        Map<String, List<TestMethodStats>> mergedTestHistoryResult = new HashMap<>();
         // Merge all the stats for tests from listeners
         for ( TestSetRunListener listener : listeners )
         {
-            List<TestMethodStats> testMethodStats = listener.getTestMethodStats();
-            for ( TestMethodStats methodStats : testMethodStats )
+            for ( TestMethodStats methodStats : listener.getTestMethodStats() )
             {
                 List<TestMethodStats> currentMethodStats =
                     mergedTestHistoryResult.get( methodStats.getTestClassMethodName() );
                 if ( currentMethodStats == null )
                 {
-                    currentMethodStats = new ArrayList<TestMethodStats>();
+                    currentMethodStats = new ArrayList<>();
                     currentMethodStats.add( methodStats );
                     mergedTestHistoryResult.put( methodStats.getTestClassMethodName(), currentMethodStats );
                 }
@@ -302,7 +303,7 @@ public class DefaultReporterFactory
             String testClassMethodName = entry.getKey();
             completedCount++;
 
-            List<ReportEntryType> resultTypes = new ArrayList<ReportEntryType>();
+            List<ReportEntryType> resultTypes = new ArrayList<>();
             for ( TestMethodStats methodStats : testMethodStats )
             {
                 resultTypes.add( methodStats.getResultType() );
@@ -441,20 +442,19 @@ public class DefaultReporterFactory
 
     private void log( String s, Level level )
     {
-        MessageBuilder builder = buffer();
         switch ( level )
         {
             case FAILURE:
-                consoleLogger.error( builder.failure( s ).toString() );
+                failure( s );
                 break;
             case UNSTABLE:
-                consoleLogger.warning( builder.warning( s ).toString() );
+                warning( s );
                 break;
             case SUCCESS:
-                consoleLogger.info( builder.success( s ).toString() );
+                success( s );
                 break;
             default:
-                consoleLogger.info( builder.a( s ).toString() );
+                info( s );
         }
     }
 
@@ -466,13 +466,13 @@ public class DefaultReporterFactory
     private void info( String s )
     {
         MessageBuilder builder = buffer();
-        consoleLogger.info( builder.info( s ).toString() );
+        consoleLogger.info( builder.a( s ).toString() );
     }
 
-    private void err( String s )
+    private void warning( String s )
     {
         MessageBuilder builder = buffer();
-        consoleLogger.error( builder.error( s ).toString() );
+        consoleLogger.warning( builder.warning( s ).toString() );
     }
 
     private void success( String s )

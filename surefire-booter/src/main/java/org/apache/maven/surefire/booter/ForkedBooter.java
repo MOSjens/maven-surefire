@@ -86,7 +86,7 @@ public final class ForkedBooter
 
     private void setupBooter( String tmpDir, String dumpFileName, String surefirePropsFileName,
                               String effectiveSystemPropertiesFileName )
-            throws IOException, SurefireExecutionException
+            throws IOException
     {
         BooterDeserializer booterDeserializer =
                 new BooterDeserializer( createSurefirePropertiesIfFileExists( tmpDir, surefirePropsFileName ) );
@@ -95,7 +95,8 @@ public final class ForkedBooter
         setSystemProperties( new File( tmpDir, effectiveSystemPropertiesFileName ) );
 
         providerConfiguration = booterDeserializer.deserialize();
-        DumpErrorSingleton.getSingleton().init( dumpFileName, providerConfiguration.getReporterConfiguration() );
+        DumpErrorSingleton.getSingleton()
+                .init( providerConfiguration.getReporterConfiguration().getReportsDirectory(), dumpFileName );
 
         startupConfiguration = booterDeserializer.getProviderConfiguration();
         systemExitTimeoutInSeconds = providerConfiguration.systemExitTimeout( DEFAULT_SYSTEM_EXIT_TIMEOUT_IN_SECONDS );

@@ -31,8 +31,49 @@
 Maven ${thisPlugin} Plugin
 
 
-  Requirements: Maven 2.2.1 or 3.x, and JDK 1.6 or higher. Due to wrong formatting of console text messages
+  Requirements: Maven 3.x and JDK 1.7 or higher. Due to wrong formatting of console text messages
   in Maven Version prior to 3.1.0 it is highly recommended to use Maven 3.1.0 or higher.
+
+*---------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+||Roadmap                                     ||Release Targets                                                                                                                                                                |
+*---------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                             | Maven API 3.0 and Java 1.7                                                                                                                                                   \ |
+|                                             |                                                                                                                                                                              \ |
+|                                             | {{{https://issues.apache.org/jira/browse/SUREFIRE-1493}Maven Plugin API 3.0}}                                                                                                \ |
+| 3.0.0-M1                                    | {{{https://issues.apache.org/jira/browse/SUREFIRE-1474}Java 1.7 as minimum}}                                                                                                 \ |
+|                                             | {{{https://issues.apache.org/jira/browse/SUREFIRE-1212}@Component is deprecated. @Parameter should be used instead}}                                                         \ |
+|                                             | {{{https://issues.apache.org/jira/browse/SUREFIRE-1588}Surefire manifest jar classloading broken on latest Debian/Ubuntu Java8}}                                            \ |
+|                                             | {{{https://issues.apache.org/jira/projects/SUREFIRE/versions/12342871}See the Release Notes for the version 3.0.0-M1}}                                                       \ |
+*---------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                             | Fixed: JDK9 and Windows Class-Path issues, 3.0 and Legacy Report XSD, 3.0.0-M2 shadefire                                                                                     \ |
+|                                             |                                                                                                                                                                              \ |
+|                                             | {{{https://issues.apache.org/jira/browse/SUREFIRE-1568}Fixed JDK9+ (Jigsaw) modular paths (module-info.java) having white spaces on file system}}                            \ |
+|                                             | {{{https://issues.apache.org/jira/browse/SUREFIRE-1593}Windows slashes appear in relative paths of Class-Path in MANIFEST.MF (Boot Manifest-JAR)}}                           \ |
+|                                             | {{{https://issues.apache.org/jira/browse/SUREFIRE-1602}Surefire fails loading class ForkedBooter when using a sub-directory pom file}}                                       \ |
+|                                             | {{{https://issues.apache.org/jira/browse/SUREFIRE-1605}Plugin fails if used Toolchains together with JDK9+ and (Jigsaw) modular paths (module-info.java)}}                   \ |
+| 3.0.0-M2                                    | {{{https://issues.apache.org/jira/browse/SUREFIRE-1590}3.0 and Legacy Report XSD}}                                                                                           \ |
+|                                             | {{{https://issues.apache.org/jira/browse/SUREFIRE-1600}3.0.0-M2 shadefire}}                                                                                                  \ |
+|                                             |                                                                                                                                                                              \ |
+|                                             | Feature: Option to switch-off Java 9 modules                                                                                                                                 \ |
+|                                             |                                                                                                                                                                              \ |
+|                                             | {{{https://issues.apache.org/jira/browse/SUREFIRE-1531}Option to switch-off Java 9 modules}}                                                                                 \ |
+|                                             |                                                                                                                                                                              \ |
+|                                             | {{{https://issues.apache.org/jira/projects/SUREFIRE/versions/12344396}See the Release Notes for the version 3.0.0-M2}}                                                       \ |
+*---------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                             | Fixed: maven-surefire-report-plugin supports JDK11, JUnit5 issues, deprecated skipTests in Failsafe plugin, used ShadeFire 3.0.0-M2                                          \ |
+|                                             |                                                                                                                                                                              \ |
+|                                             | {{{https://issues.apache.org/jira/browse/SUREFIRE-1613}maven-surefire-report-plugin fails on JDK 11}}                                                                        \ |
+| 3.0.0-M3                                    | {{{https://issues.apache.org/jira/browse/SUREFIRE-1614}JUnit Runner that writes to System.out corrupts Surefire's STDOUT when using JUnit's Vintage Engine}}                 \ |
+|                                             | {{{https://issues.apache.org/jira/browse/SUREFIRE-1616}Smart stacktrace in test summary should not print JUnit5 assertion exception type}}                                   \ |
+|                                             | {{{https://issues.apache.org/jira/browse/SUREFIRE-1611}Deprecate skipTests in Failsafe Plugin}}                                                                               \ |
+|                                             | {{{https://issues.apache.org/jira/projects/SUREFIRE/versions/12342872}See the Release Notes for the version 3.0.0-M3}}                                                       \ |
+*---------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| 3.0.0-M4                                    | New interprocess communication and TCP/IP which fixes current blocker and critical bugs.                                                                                       |
+*---------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| 3.0.0-M5                                    | Extensions API                                                                                                                                                                 |
+*---------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| 3.0.0-M6                                    | Breaking backwards compatibility with system properties in configuration parameters, removing deprecated configuration parameters and removing deprecated code, etc.           |
+*---------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 #{if}(${project.artifactId}=="maven-surefire-plugin")
   The Surefire Plugin is used during the <<<test>>> phase of the build
@@ -84,7 +125,14 @@ mvn verify
   By default, these files are generated in <<<$\{basedir\}/target/${thisPlugin.toLowerCase()}-reports/TEST-*.xml>>>.
 
   The schema for the ${thisPlugin} XML reports is available at
-  {{{./xsd/${thisPlugin.toLowerCase()}-test-report.xsd}${thisPlugin} XML Report Schema}}.
+  {{{./xsd/${thisPlugin.toLowerCase()}-test-report-3.0.xsd}${thisPlugin} XML Report Schema}}.
+
+  The XML reports generated by legacy plugins (versions up to 2.22.0) should be validated by
+  {{{./xsd/${thisPlugin.toLowerCase()}-test-report.xsd}Legacy ${thisPlugin} XML Report Schema}}.
+
+  Two plugin versions (2.22.1 and 3.0.0-M1) however generate 3.0 XML reports they still refer to legacy
+  schema (see <<<noNamespaceSchemaLocation>>> in XML Report). The projects which expect XML Reports
+  validated by XSD Schema, tools e.g xUnit, should not use versions 2.22.1 and 3.0.0-M1 of the ${thisPlugin} plugin.
 
   For an HTML format of the report, please see the
   {{{http://maven.apache.org/plugins/maven-surefire-report-plugin/}Maven Surefire Report Plugin}}.

@@ -33,13 +33,14 @@
   <description>Parses report output files from surefire.</description>
 
   <prerequisites>
-    <maven>2.2.1</maven>
+    <maven>3.0</maven>
   </prerequisites>
 
   <dependencies>
     <dependency>
       <groupId>org.apache.maven.surefire</groupId>
       <artifactId>surefire-logger-api</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.shared</groupId>
@@ -58,7 +59,7 @@
           <dependency>
             <groupId>org.apache.maven.surefire</groupId>
             <artifactId>surefire-shadefire</artifactId>
-            <version>2.12.4</version> <!-- ${shadedVersion}, but resolved due to https://issues.apache.org/jira/browse/MRELEASE-799 -->
+            <version>3.0.0-M3</version> <!-- ${shadedVersion}, but resolved due to https://issues.apache.org/jira/browse/MRELEASE-799 -->
           </dependency>
         </dependencies>
         <configuration>
@@ -68,8 +69,6 @@
         </configuration>
       </plugin>
       <plugin>
-        <!-- Do we need shading here ?? -->
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
         <executions>
           <execution>
@@ -86,8 +85,8 @@
               </artifactSet>
               <relocations>
                 <relocation>
-                  <pattern>org.apache.maven.shared</pattern>
-                  <shadedPattern>org.apache.maven.surefire.shade.org.apache.maven.shared</shadedPattern>
+                  <pattern>org.apache.maven.shared.utils</pattern>
+                  <shadedPattern>org.apache.maven.surefire.shade.report.org.apache.maven.shared.utils</shadedPattern>
                 </relocation>
               </relocations>
             </configuration>

@@ -62,7 +62,7 @@ public class JUnitCoreTester
 
         try
         {
-            final HashMap<String, TestSet> classMethodCounts = new HashMap<String, TestSet>();
+            final HashMap<String, TestSet> classMethodCounts = new HashMap<>();
             RunListener reporter = createInstance( classMethodCounts, reporterManagerFactory, parallelClasses, false,
                                                          new DefaultDirectConsoleReporter( System.out ) );
             startCapture( (ConsoleOutputReceiver) reporter );
@@ -105,6 +105,6 @@ public class JUnitCoreTester
         File target = new File( "./target" );
         File statisticsFile = new File( target, "TESTHASHxXML" );
         return new StartupReportConfiguration( true, true, "PLAIN", false, true, target, false, null, statisticsFile,
-                false, 0, null, null );
+                false, 0, null, null, false );
     }
 }

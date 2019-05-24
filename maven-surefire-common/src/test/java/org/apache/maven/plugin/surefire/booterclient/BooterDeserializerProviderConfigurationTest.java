@@ -67,8 +67,8 @@ public class BooterDeserializerProviderConfigurationTest
     {
 
         File aDir = new File( "." );
-        List<String> includes = new ArrayList<String>();
-        List<String> excludes = new ArrayList<String>();
+        List<String> includes = new ArrayList<>();
+        List<String> excludes = new ArrayList<>();
         includes.add( "abc" );
         includes.add( "cde" );
         excludes.add( "xx1" );
@@ -191,8 +191,8 @@ public class BooterDeserializerProviderConfigurationTest
     private DirectoryScannerParameters getDirectoryScannerParametersWithoutSpecificTests()
     {
         File aDir = new File( "." );
-        List<String> includes = new ArrayList<String>();
-        List<String> excludes = new ArrayList<String>();
+        List<String> includes = new ArrayList<>();
+        List<String> excludes = new ArrayList<>();
         includes.add( "abc" );
         includes.add( "cde" );
         excludes.add( "xx1" );
@@ -220,7 +220,7 @@ public class BooterDeserializerProviderConfigurationTest
             test = "aTest";
         }
         final File propsTest = booterSerializer.serialize( props, booterConfiguration, testProviderConfiguration, test,
-                                                           readTestsFromInStream, 51L );
+                                                           readTestsFromInStream, 51L, 1 );
         BooterDeserializer booterDeserializer = new BooterDeserializer( new FileInputStream( propsTest ) );
         assertEquals( 51L, (Object) booterDeserializer.getPluginPid() );
         return booterDeserializer.deserialize();

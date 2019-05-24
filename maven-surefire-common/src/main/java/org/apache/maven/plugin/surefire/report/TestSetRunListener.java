@@ -20,9 +20,10 @@ package org.apache.maven.plugin.surefire.report;
  */
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.apache.maven.plugin.surefire.log.api.ConsoleLogger;
 import org.apache.maven.plugin.surefire.runorder.StatisticsReporter;
@@ -45,18 +46,9 @@ import static org.apache.maven.plugin.surefire.report.ReportEntryType.SUCCESS;
 public class TestSetRunListener
     implements RunListener, ConsoleOutputReceiver, ConsoleLogger
 {
+    private final Queue<TestMethodStats> testMethodStats = new ConcurrentLinkedQueue<>();
+
     private final TestSetStats detailsForThis;
-
-    private List<TestMethodStats> testMethodStats;
-
-    private Utf8RecodingDeferredFileOutputStream testStdOut = initDeferred( "stdout" );
-
-    private Utf8RecodingDeferredFileOutputStream testStdErr = initDeferred( "stderr" );
-
-    private Utf8RecodingDeferredFileOutputStream initDeferred( String channel )
-    {
-        return new Utf8RecodingDeferredFileOutputStream( channel );
-    }
 
     private final TestcycleConsoleOutputReceiver consoleOutputReceiver;
 
@@ -69,6 +61,10 @@ public class TestSetRunListener
     private final FileReporter fileReporter;
 
     private final StatisticsReporter statisticsReporter;
+
+    private Utf8RecodingDeferredFileOutputStream testStdOut = initDeferred( "stdout" );
+
+    private Utf8RecodingDeferredFileOutputStream testStdErr = initDeferred( "stderr" );
 
     @SuppressWarnings( "checkstyle:parameternumber" )
     public TestSetRunListener( ConsoleReporter consoleReporter, FileReporter fileReporter,
@@ -84,7 +80,6 @@ public class TestSetRunListener
         this.consoleOutputReceiver = consoleOutputReceiver;
         this.briefOrPlainFormat = briefOrPlainFormat;
         detailsForThis = new TestSetStats( trimStackTrace, isPlainFormat );
-        testMethodStats = new ArrayList<TestMethodStats>();
     }
 
     @Override
@@ -148,18 +143,12 @@ public class TestSetRunListener
     }
 
     @Override
-    public void writeTestOutput( byte[] buf, int off, int len, boolean stdout )
+    public synchronized void writeTestOutput( byte[] buf, int off, int len, boolean stdout )
     {
         try
         {
-            if ( stdout )
-            {
-                testStdOut.write( buf, off, len );
-            }
-            else
-            {
-                testStdErr.write( buf, off, len );
-            }
+            Utf8RecodingDeferredFileOutputStream os = stdout ? testStdOut : testStdErr;
+            os.write( buf, off, len );
             consoleOutputReceiver.writeTestOutput( buf, off, len, stdout );
         }
         catch ( IOException e )
@@ -204,7 +193,7 @@ public class TestSetRunListener
     }
 
     // ----------------------------------------------------------------------
-    // Test
+    // Test callback methods:
     // ----------------------------------------------------------------------
 
     @Override
@@ -299,7 +288,7 @@ public class TestSetRunListener
         }
     }
 
-    public List<TestMethodStats> getTestMethodStats()
+    public Queue<TestMethodStats> getTestMethodStats()
     {
         return testMethodStats;
     }
@@ -312,6 +301,11 @@ public class TestSetRunListener
 
     private static int lineBoundSymbolWidth( String message )
     {
-        return message.endsWith( "\n" ) || message.endsWith( "\r" ) ? 1 : ( message.endsWith( "\r\n" ) ? 2 : 0 );
+        return message.endsWith( "\r\n" ) ? 2 : ( message.endsWith( "\n" ) || message.endsWith( "\r" ) ? 1 : 0 );
+    }
+
+    private static Utf8RecodingDeferredFileOutputStream initDeferred( String channel )
+    {
+        return new Utf8RecodingDeferredFileOutputStream( channel );
     }
 }

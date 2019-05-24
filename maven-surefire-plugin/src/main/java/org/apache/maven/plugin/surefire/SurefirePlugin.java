@@ -23,8 +23,6 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -302,6 +300,8 @@ public class SurefirePlugin
      * **{@literal /}NotIncludedByDefault.java
      * %regex[.*Test.*|.*Not.*]
      * </code></pre>
+     *
+     * @since 2.13
      */
     @Parameter( property = "surefire.includesFile" )
     private File includesFile;
@@ -314,6 +314,8 @@ public class SurefirePlugin
      * **{@literal /}DontRunTest.*
      * %regex[.*Test.*|.*Not.*]
      * </code></pre>
+     *
+     * @since 2.13
      */
     @Parameter( property = "surefire.excludesFile" )
     private File excludesFile;
@@ -351,6 +353,17 @@ public class SurefirePlugin
     @Parameter( property = "surefire.shutdown", defaultValue = "testset" )
     private String shutdown;
 
+    /**
+     * Disables modular path (aka Jigsaw project since of Java 9) even if <i>module-info.java</i> is used in project.
+     * <br>
+     * Enabled by default.
+     * If enabled, <i>module-info.java</i> exists and executes with JDK 9+, modular path is used.
+     *
+     * @since 3.0.0-M2
+     */
+    @Parameter( property = "surefire.useModulePath", defaultValue = "true" )
+    private boolean useModulePath;
+
     @Override
     protected int getRerunFailingTestsCount()
     {
@@ -385,14 +398,7 @@ public class SurefirePlugin
     @Override
     protected String getReportSchemaLocation()
     {
-        return "https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd";
-    }
-
-    @Override
-    protected Artifact getMojoArtifact()
-    {
-        final Map<String, Artifact> pluginArtifactMap = getPluginArtifactMap();
-        return pluginArtifactMap.get( "org.apache.maven.plugins:maven-surefire-plugin" );
+        return "https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd";
     }
     
     // now for the implementation of the field accessors
@@ -709,6 +715,18 @@ public class SurefirePlugin
     public File getExcludesFile()
     {
         return excludesFile;
+    }
+
+    @Override
+    protected boolean useModulePath()
+    {
+        return useModulePath;
+    }
+
+    @Override
+    protected void setUseModulePath( boolean useModulePath )
+    {
+        this.useModulePath = useModulePath;
     }
 
     @Override

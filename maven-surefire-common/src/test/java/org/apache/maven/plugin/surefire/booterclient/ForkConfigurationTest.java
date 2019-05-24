@@ -39,8 +39,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
+import static java.io.File.createTempFile;
 import static java.util.Collections.singletonList;
 import static org.apache.maven.surefire.booter.Classpath.emptyClasspath;
+import static org.fest.util.Files.temporaryFolder;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -66,7 +68,7 @@ public class ForkConfigurationTest
         ClassLoaderConfiguration clc = new ClassLoaderConfiguration( true, true );
         StartupConfiguration startup = new StartupConfiguration( "", cpConfig, clc, false, false );
 
-        Commandline cli = config.createCommandLine( startup, 1 , false,null );
+        Commandline cli = config.createCommandLine( startup, 1, temporaryFolder(), false, null );
 
         String line = StringUtils.join( cli.getCommandline(), " " );
         assertTrue( line.contains( "-jar" ) );
@@ -86,7 +88,7 @@ public class ForkConfigurationTest
         ClassLoaderConfiguration clc = new ClassLoaderConfiguration( true, true );
         StartupConfiguration startup = new StartupConfiguration( "", cpConfig, clc, false, false );
 
-        Commandline commandLine = config.createCommandLine( startup, 1 , false, null );
+        Commandline commandLine = config.createCommandLine( startup, 1 ,temporaryFolder(), false, null );
 
         assertTrue( commandLine.toString().contains( "abc def" ) );
     }
@@ -108,8 +110,8 @@ public class ForkConfigurationTest
         ClassLoaderConfiguration clc = new ClassLoaderConfiguration( true, true );
         StartupConfiguration startup = new StartupConfiguration( "", cpConfig, clc, false, false );
         ForkConfiguration config = getForkConfiguration( cwd.getCanonicalFile() );
-
-        Commandline commandLine = config.createCommandLine( startup, 1 , false , null );
+		
+        Commandline commandLine = config.createCommandLine( startup, 1 ,temporaryFolder(), false , null );
 
         File forkDirectory = new File( baseDir, "fork_1" );
         forkDirectory.deleteOnExit();
@@ -120,7 +122,7 @@ public class ForkConfigurationTest
 
     @Test
     public void testExceptionWhenCurrentDirectoryIsNotRealDirectory()
-        throws IOException, SurefireBooterForkException
+        throws IOException
     {
         // SUREFIRE-1136
         File baseDir =
@@ -136,7 +138,7 @@ public class ForkConfigurationTest
 
         try
         {
-            config.createCommandLine( STARTUP_CONFIG, 1, false, null );
+            config.createCommandLine( STARTUP_CONFIG, 1, temporaryFolder(), false, null );
         }
         catch ( SurefireBooterForkException sbfe )
         {
@@ -151,7 +153,7 @@ public class ForkConfigurationTest
 
     @Test
     public void testExceptionWhenCurrentDirectoryCannotBeCreated()
-        throws IOException, SurefireBooterForkException
+        throws IOException
     {
         // SUREFIRE-1136
         File baseDir =
@@ -166,7 +168,7 @@ public class ForkConfigurationTest
 
         try
         {
-            config.createCommandLine( STARTUP_CONFIG, 1, false, null );
+            config.createCommandLine( STARTUP_CONFIG, 1, temporaryFolder(), false, null );
         }
         catch ( SurefireBooterForkException sbfe )
         {
@@ -183,7 +185,7 @@ public class ForkConfigurationTest
     private File getTempClasspathFile()
         throws IOException
     {
-        File cpElement = File.createTempFile( "ForkConfigurationTest.", ".file" );
+        File cpElement = createTempFile( "ForkConfigurationTest.", ".file" );
         cpElement.deleteOnExit();
         return cpElement;
     }
@@ -206,7 +208,7 @@ public class ForkConfigurationTest
         throws IOException
     {
         Platform platform = new Platform().withJdkExecAttributesForTests( new JdkAttributes( jvm, false ) );
-        File tmpDir = File.createTempFile( "target", "surefire" );
+        File tmpDir = createTempFile( "target", "surefire" );
         assertTrue( tmpDir.delete() );
         assertTrue( tmpDir.mkdirs() );
         return new JarManifestForkConfiguration( emptyClasspath(), tmpDir, null,
